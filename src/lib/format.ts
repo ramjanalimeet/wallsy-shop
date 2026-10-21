@@ -1,5 +1,6 @@
 /** Formats minor units (paisa/cents). Taka uses South Asian grouping: ৳1,00,000. */
-export function money(cents: number, currency = "৳") {
+export function money(cents: number, currency = "৳"): string {
+  if (cents < 0) return `−${money(-cents, currency)}`;
   const value = cents / 100;
   const digits = Number.isInteger(value) ? 0 : 2;
   const locale = currency === "৳" ? "en-IN" : "en-US";

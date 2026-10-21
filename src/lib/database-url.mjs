@@ -14,19 +14,33 @@ function find(names, env) {
 }
 
 /**
- * On serverless hosts many copies of the app can run at once, and each Prisma client
- * opens several connections by default. Databases like Prisma Postgres allow only a
- * handful of direct connections, so give each copy a single connection there.
- * An explicit connection_limit in the URL always wins.
+ * Tunes the connection string for the running app:
+ * - Prisma Postgres allows only a few direct connections (db.prisma.io), so app
+ *   traffic goes through its PgBouncer pooler (pooled.db.prisma.io) instead.
+ * - Behind PgBouncer, Prisma must not use prepared statements (pgbouncer=true).
+ * - On serverless hosts many copies run at once, so each gets one connection.
+ * Anything already set in the URL wins.
  */
-function limitConnections(url, env) {
-  if (!url || !env.VERCEL || !/^postgres(ql)?:\/\//.test(url) || /[?&]connection_limit=/.test(url)) return url;
-  return `${url}${url.includes("?") ? "&" : "?"}connection_limit=1&pool_timeout=20`;
+function tune(url, env) {
+  if (!url || !/^postgres(ql)?:\/\//.test(url)) return url;
+  let u;
+  try {
+    u = new URL(url);
+  } catch {
+    return url;
+  }
+  if (u.hostname === "db.prisma.io") u.hostname = "pooled.db.prisma.io";
+  if (/^pooled\.|pooler|pgbouncer/.test(u.hostname) && !u.searchParams.has("pgbouncer")) u.searchParams.set("pgbouncer", "true");
+  if (env.VERCEL && !u.searchParams.has("connection_limit")) {
+    u.searchParams.set("connection_limit", "1");
+    u.searchParams.set("pool_timeout", "20");
+  }
+  return u.toString();
 }
 
 /** Connection string for the running app (pooled when available). */
 export function databaseUrl(env = process.env) {
-  return limitConnections(find(POOLED, env), env);
+  return tune(find(POOLED, env), env);
 }
 
 /** Connection string for schema changes (direct when available). */
