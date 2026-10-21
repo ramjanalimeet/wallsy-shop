@@ -125,6 +125,25 @@ export async function toggleProduct(form: FormData) {
   refresh();
 }
 
+export async function bulkProducts(form: FormData) {
+  await requireAdmin();
+  let ids: string[] = [];
+  try {
+    ids = (JSON.parse(str(form, "ids", 20000)) as unknown[]).map(String);
+  } catch {
+    return;
+  }
+  if (!ids.length) return;
+  const where = { id: { in: ids } };
+  const op = str(form, "op");
+  if (op === "delete") await db.product.deleteMany({ where });
+  else if (op === "publish") await db.product.updateMany({ where, data: { active: true } });
+  else if (op === "hide") await db.product.updateMany({ where, data: { active: false } });
+  else if (op === "feature") await db.product.updateMany({ where, data: { featured: true } });
+  else if (op === "unfeature") await db.product.updateMany({ where, data: { featured: false } });
+  refresh();
+}
+
 // ---------- Categories ----------
 
 export async function saveCategory(_: State, form: FormData): Promise<State> {

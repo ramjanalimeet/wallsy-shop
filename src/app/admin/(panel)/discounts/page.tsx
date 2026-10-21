@@ -13,9 +13,9 @@ export default async function DiscountsPage() {
     <>
       <PageHeader title="Discount codes" subtitle={`Customers enter these at checkout. Your newsletter sign-up code is ${settings.newsletterCode} — make sure it exists here.`} />
       <div className="grid gap-4 lg:grid-cols-[1.5fr_1fr]">
-        <div className="overflow-x-auto rounded-2xl border border-line bg-white">
+        <div className="overflow-x-auto rounded-2xl border border-[#ece8e1] bg-white">
           <table className="w-full text-sm">
-            <thead className="border-b border-line text-left text-xs uppercase tracking-wider text-muted">
+            <thead className="border-b border-[#ece8e1] text-left text-xs font-medium uppercase tracking-[0.12em] text-muted">
               <tr>
                 <th className="p-3">Code</th>
                 <th className="p-3">Discount</th>

@@ -1,17 +1,17 @@
 export function PageHeader({ title, subtitle, children }: { title: string; subtitle?: string; children?: React.ReactNode }) {
   return (
-    <div className="mb-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+    <div className="mb-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
-        {subtitle && <p className="mt-1 text-sm text-muted">{subtitle}</p>}
+        <h1 className="font-serif text-4xl tracking-tight">{title}</h1>
+        {subtitle && <p className="mt-2 text-muted">{subtitle}</p>}
       </div>
-      {children && <div className="flex gap-2">{children}</div>}
+      {children && <div className="flex flex-wrap gap-2">{children}</div>}
     </div>
   );
 }
 
 export function Card({ children, className = "" }: { children: React.ReactNode; className?: string }) {
-  return <div className={`rounded-2xl border border-line bg-white p-5 ${className}`}>{children}</div>;
+  return <div className={`rounded-2xl border border-[#ece8e1] bg-white p-5 ${className}`}>{children}</div>;
 }
 
 export function Field({ label, hint, children, className = "" }: { label: string; hint?: string; children: React.ReactNode; className?: string }) {

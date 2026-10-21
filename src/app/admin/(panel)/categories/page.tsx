@@ -40,7 +40,7 @@ export default async function CategoriesPage() {
                 <ActionForm action={saveCategory} success="Collection saved">
                   <CategoryFields c={c} />
                   <div className="mt-3 flex items-center gap-3">
-                    <SubmitButton className="btn btn-primary px-4 py-2 text-sm">Save</SubmitButton>
+                    <SubmitButton className="btn btn-primary rounded-xl px-5 py-3">Save</SubmitButton>
                     <span className="text-sm text-muted">{c._count.products} products</span>
                   </div>
                 </ActionForm>

@@ -29,7 +29,7 @@ export default async function ReviewsPage({ searchParams }: { searchParams: Prom
       ) : (
         <div className="space-y-3">
           {reviews.map((r) => (
-            <div key={r.id} className="flex flex-col gap-3 rounded-2xl border border-line bg-white p-5 sm:flex-row">
+            <div key={r.id} className="flex flex-col gap-3 rounded-2xl border border-[#ece8e1] bg-white p-5 sm:flex-row">
               <div className="flex-1">
                 <div className="flex items-center gap-3 text-sm">
                   <Stars rating={r.rating} />

@@ -17,10 +17,10 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   ]);
 
   return (
-    <div className="min-h-screen bg-[#f6f5f2]">
+    <div className="min-h-screen bg-[#f8f7f4]">
       <AdminNav storeName={settings.storeName} pendingOrders={pendingOrders} pendingReviews={pendingReviews} />
-      <div className="lg:pl-60">
-        <div className="mx-auto max-w-6xl p-4 sm:p-8">{children}</div>
+      <div className="lg:pl-72">
+        <div className="max-w-[1280px] px-4 py-6 sm:px-8 sm:py-10 lg:pl-10">{children}</div>
       </div>
     </div>
   );

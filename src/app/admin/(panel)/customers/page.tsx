@@ -24,9 +24,9 @@ export default async function CustomersPage() {
     <>
       <PageHeader title="Customers" subtitle={`${customers.length} buyers · ${subscribers.length} newsletter subscribers`} />
       <div className="grid gap-4 lg:grid-cols-[1.6fr_1fr]">
-        <div className="overflow-x-auto rounded-2xl border border-line bg-white">
+        <div className="overflow-x-auto rounded-2xl border border-[#ece8e1] bg-white">
           <table className="w-full text-sm">
-            <thead className="border-b border-line text-left text-xs uppercase tracking-wider text-muted">
+            <thead className="border-b border-[#ece8e1] text-left text-xs font-medium uppercase tracking-[0.12em] text-muted">
               <tr>
                 <th className="p-3">Customer</th>
                 <th className="p-3">Orders</th>

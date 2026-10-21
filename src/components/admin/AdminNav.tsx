@@ -4,81 +4,83 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { logout } from "@/app/admin/actions";
+import { CollectionsIcon, CustomersIcon, DiscountIcon, ExternalIcon, HomeIcon, LogoutIcon, MenuIcon, OrdersIcon, ProductsIcon, SettingsIcon, StarIcon } from "./icons";
 
 const links = [
-  ["/admin", "Overview", "◎"],
-  ["/admin/orders", "Orders", "▤"],
-  ["/admin/products", "Products", "▦"],
-  ["/admin/categories", "Collections", "◫"],
-  ["/admin/discounts", "Discounts", "%"],
-  ["/admin/reviews", "Reviews", "★"],
-  ["/admin/customers", "Customers", "☺"],
-  ["/admin/settings", "Store settings", "⚙"],
-];
+  ["/admin", "Overview", HomeIcon],
+  ["/admin/orders", "Orders", OrdersIcon],
+  ["/admin/products", "Products", ProductsIcon],
+  ["/admin/categories", "Collections", CollectionsIcon],
+  ["/admin/discounts", "Discounts", DiscountIcon],
+  ["/admin/reviews", "Reviews", StarIcon],
+  ["/admin/customers", "Customers", CustomersIcon],
+  ["/admin/settings", "Store settings", SettingsIcon],
+] as const;
 
 export function AdminNav({ storeName, pendingOrders, pendingReviews }: { storeName: string; pendingOrders: number; pendingReviews: number }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const badge = (href: string) => (href === "/admin/orders" ? pendingOrders : href === "/admin/reviews" ? pendingReviews : 0);
 
+  const logo = (
+    <p className="font-serif text-3xl tracking-tight">
+      {storeName}
+      <span className="text-accent">.</span> <span className="font-sans text-sm text-muted">admin</span>
+    </p>
+  );
+
   const nav = (
-    <nav className="flex flex-col gap-1">
-      {links.map(([href, label, icon]) => {
-        const active = href === "/admin" ? pathname === "/admin" : pathname.startsWith(href);
-        const n = badge(href);
-        return (
-          <Link
-            key={href}
-            href={href}
-            onClick={() => setOpen(false)}
-            className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium ${active ? "bg-white/10 text-white" : "text-white/65 hover:bg-white/5 hover:text-white"}`}
-          >
-            <span className="w-4 text-center">{icon}</span>
-            {label}
-            {n > 0 && <span className="ml-auto rounded-full bg-accent px-2 py-0.5 text-xs text-white">{n}</span>}
-          </Link>
-        );
-      })}
-    </nav>
+    <>
+      <nav className="flex flex-col gap-1">
+        {links.map(([href, label, Icon]) => {
+          const active = href === "/admin" ? pathname === "/admin" : pathname.startsWith(href);
+          const n = badge(href);
+          return (
+            <Link
+              key={href}
+              href={href}
+              onClick={() => setOpen(false)}
+              className={`flex items-center gap-4 rounded-xl px-4 py-3 text-[15px] transition ${active ? "bg-[#f1efea] font-medium text-ink" : "text-ink/80 hover:bg-[#f6f4f0]"}`}
+            >
+              <Icon className={`h-5 w-5 ${active ? "text-ink" : "text-ink/70"}`} />
+              {label}
+              {n > 0 && <span className="ml-auto rounded-full bg-accent px-2 py-0.5 text-xs font-semibold text-white">{n}</span>}
+            </Link>
+          );
+        })}
+      </nav>
+      <div className="mt-auto space-y-1 border-t border-line pt-4">
+        <Link href="/" target="_blank" className="flex items-center gap-4 rounded-xl px-4 py-3 text-[15px] text-ink/80 hover:bg-[#f6f4f0]">
+          <ExternalIcon className="h-5 w-5 text-ink/70" /> View store
+        </Link>
+        <form action={logout}>
+          <button className="flex w-full items-center gap-4 rounded-xl px-4 py-3 text-left text-[15px] text-ink/80 hover:bg-[#f6f4f0]">
+            <LogoutIcon className="h-5 w-5 text-ink/70" /> Log out
+          </button>
+        </form>
+      </div>
+    </>
   );
 
   return (
     <>
-      <aside className="fixed inset-y-0 left-0 hidden w-60 flex-col bg-ink p-4 lg:flex">
-        <p className="mb-8 px-3 pt-2 font-serif text-2xl text-white">
-          {storeName}
-          <span className="text-accent">.</span> <span className="font-sans text-xs font-medium text-white/40">admin</span>
-        </p>
+      <aside className="fixed inset-y-4 left-4 hidden w-64 flex-col rounded-2xl bg-white p-4 shadow-[0_1px_3px_rgb(0_0_0/0.04),0_8px_24px_-12px_rgb(0_0_0/0.08)] lg:flex">
+        <div className="mb-8 px-4 pt-4">{logo}</div>
         {nav}
-        <div className="mt-auto space-y-1 border-t border-white/10 pt-4">
-          <Link href="/" target="_blank" className="block rounded-lg px-3 py-2 text-sm text-white/65 hover:text-white">
-            ↗ View store
-          </Link>
-          <form action={logout}>
-            <button className="w-full rounded-lg px-3 py-2 text-left text-sm text-white/65 hover:text-white">⎋ Log out</button>
-          </form>
-        </div>
       </aside>
 
-      <header className="sticky top-0 z-30 flex items-center justify-between bg-ink px-4 py-3 text-white lg:hidden">
-        <p className="font-serif text-xl">
-          {storeName}
-          <span className="text-accent">.</span> <span className="font-sans text-xs text-white/40">admin</span>
-        </p>
-        <button onClick={() => setOpen((v) => !v)} className="rounded-lg border border-white/20 px-3 py-1 text-sm">
-          {open ? "Close" : "Menu"}
+      <header className="sticky top-0 z-30 flex items-center justify-between border-b border-line bg-white px-4 py-3 lg:hidden">
+        {logo}
+        <button onClick={() => setOpen((v) => !v)} className="rounded-lg border border-line p-2" aria-label="Menu">
+          <MenuIcon />
         </button>
       </header>
       {open && (
-        <div className="fixed inset-x-0 top-[52px] z-30 bg-ink p-4 lg:hidden">
-          {nav}
-          <div className="mt-3 flex gap-4 border-t border-white/10 px-3 pt-3 text-sm text-white/65">
-            <Link href="/" target="_blank">
-              ↗ View store
-            </Link>
-            <form action={logout}>
-              <button>⎋ Log out</button>
-            </form>
+        <div className="fixed inset-0 z-40 lg:hidden">
+          <div className="absolute inset-0 bg-black/30" onClick={() => setOpen(false)} />
+          <div className="absolute inset-y-0 left-0 flex w-72 flex-col bg-white p-4">
+            <div className="mb-6 px-4 pt-2">{logo}</div>
+            {nav}
           </div>
         </div>
       )}

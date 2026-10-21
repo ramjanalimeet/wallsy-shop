@@ -40,9 +40,9 @@ export default async function OrdersPage({ searchParams }: { searchParams: Promi
       {orders.length === 0 ? (
         <Empty>No orders here yet.</Empty>
       ) : (
-        <div className="overflow-x-auto rounded-2xl border border-line bg-white">
+        <div className="overflow-x-auto rounded-2xl border border-[#ece8e1] bg-white">
           <table className="w-full text-sm">
-            <thead className="border-b border-line text-left text-xs uppercase tracking-wider text-muted">
+            <thead className="border-b border-[#ece8e1] text-left text-xs font-medium uppercase tracking-[0.12em] text-muted">
               <tr>
                 <th className="p-3">Order</th>
                 <th className="p-3">Date</th>

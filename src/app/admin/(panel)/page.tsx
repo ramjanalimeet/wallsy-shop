@@ -57,7 +57,7 @@ export default async function Overview() {
   return (
     <>
       <PageHeader title="Overview" subtitle={`Here's how ${settings.storeName} is doing over the last ${DAYS} days.`}>
-        <Link href="/admin/products/new" className="btn btn-primary px-4 py-2 text-sm">
+        <Link href="/admin/products/new" className="btn btn-primary rounded-xl px-5 py-3">
           + Add product
         </Link>
       </PageHeader>
