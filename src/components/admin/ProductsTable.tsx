@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { bulkProducts, deleteProduct, toggleProduct } from "@/app/admin/actions";
+import { bulkProducts, deleteProduct, duplicateProduct, toggleProduct } from "@/app/admin/actions";
 import { money } from "@/lib/format";
 import { MoreIcon } from "./icons";
 
@@ -140,6 +140,10 @@ export function ProductsTable({ rows, currency }: { rows: ProductRow[]; currency
                       <Link href={`/product/${p.slug}`} target="_blank" className="block rounded-lg px-3 py-2 hover:bg-[#f6f4f0]">
                         View on store
                       </Link>
+                      <form action={duplicateProduct}>
+                        <input type="hidden" name="id" value={p.id} />
+                        <button className="w-full rounded-lg px-3 py-2 text-left hover:bg-[#f6f4f0]">Duplicate</button>
+                      </form>
                       <form action={deleteProduct} onSubmit={(e) => !confirm(`Delete “${p.title}”? This can't be undone.`) && e.preventDefault()}>
                         <input type="hidden" name="id" value={p.id} />
                         <button className="w-full rounded-lg px-3 py-2 text-left text-red-600 hover:bg-red-50">Delete</button>

@@ -6,16 +6,9 @@ import { ProductCard } from "@/components/store/ProductCard";
 import { listProducts } from "@/lib/catalog";
 import { db } from "@/lib/db";
 import { money } from "@/lib/format";
+import { getFaq, getTrust } from "@/lib/content";
 import { getSettings } from "@/lib/settings";
 import { whatsappLink } from "@/lib/whatsapp";
-
-const faqs = [
-  ["ডেলিভারি পেতে কতদিন লাগে?", "ঢাকার ভিতরে সাধারণত ১–২ দিন এবং ঢাকার বাইরে ৩–৫ দিনের মধ্যে ডেলিভারি দেওয়া হয়। অর্ডারের পর আমরা ফোনে কনফার্ম করি।"],
-  ["কীভাবে অর্ডার করব?", "পছন্দের প্রিন্টটি কার্টে যোগ করে চেকআউট করুন, অথবা সরাসরি “WhatsApp-এ অর্ডার করুন” বাটনে ক্লিক করে আমাদের মেসেজ পাঠান।"],
-  ["পেমেন্ট কীভাবে করব?", "সারা বাংলাদেশে ক্যাশ অন ডেলিভারি। পণ্য হাতে পেয়ে ডেলিভারি ম্যানকে টাকা পরিশোধ করুন।"],
-  ["ফ্রেমের সাথে কি গ্লাস থাকে?", "প্রতিটি ফ্রেম কাঠের তৈরি, সাথে থাকে না-ভাঙা অ্যাক্রিলিক গ্লাস, সাদা ম্যাট ও দেয়ালে ঝোলানোর হুক। বক্স খুলেই দেয়ালে লাগাতে পারবেন।"],
-  ["পণ্য ফেরত দেওয়া যাবে?", "হ্যাঁ। পণ্য হাতে পাওয়ার ৭ দিনের মধ্যে রিটার্ন করতে পারবেন। ডেলিভারিতে ভাঙা বা ক্ষতিগ্রস্ত হলে আমরা বিনামূল্যে নতুন পাঠাব।"],
-];
 
 export default async function HomePage() {
   const [settings, categories, bestsellers, newest, reviews, ratingAgg] = await Promise.all([
@@ -102,12 +95,7 @@ export default async function HomePage() {
       {/* Trust strip */}
       <section className="border-y border-line bg-white">
         <div className="container-x grid grid-cols-2 gap-6 py-6 text-sm lg:grid-cols-4">
-          {[
-            [TruckIcon, "সারা দেশে ডেলিভারি", `${money(settings.freeShippingThreshold, settings.currency)}+ অর্ডারে ফ্রি`],
-            [ShieldIcon, "ক্যাশ অন ডেলিভারি", "পণ্য হাতে পেয়ে টাকা দিন"],
-            [ReturnIcon, "৭ দিনের রিটার্ন", "পছন্দ না হলে সহজে ফেরত"],
-            [LeafIcon, "প্রিমিয়াম কোয়ালিটি", "দীর্ঘস্থায়ী রং ও মোটা আর্ট পেপার"],
-          ].map(([Icon, title, text]) => {
+          {getTrust(settings).map(({ title, text }, i) => [[TruckIcon, ShieldIcon, ReturnIcon, LeafIcon][i], title, text]).map(([Icon, title, text]) => {
             const I = Icon as typeof TruckIcon;
             return (
               <div key={title as string} className="flex items-center gap-3">
@@ -269,7 +257,7 @@ export default async function HomePage() {
       <section id="faq" className="container-x max-w-3xl scroll-mt-20 py-20">
         <h2 className="mb-8 text-center font-serif text-4xl">সাধারণ জিজ্ঞাসা</h2>
         <div className="divide-y divide-line border-y border-line">
-          {faqs.map(([q, a]) => (
+          {getFaq(settings).map(({ q, a }) => (
             <details key={q} className="group py-5">
               <summary className="flex items-center justify-between gap-4 text-lg font-medium">
                 {q}

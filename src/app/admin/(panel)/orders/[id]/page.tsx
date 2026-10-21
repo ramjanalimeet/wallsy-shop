@@ -1,19 +1,35 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { updateOrderStatus } from "@/app/admin/actions";
+import { OrderDetailsForm } from "@/components/admin/OrderDetailsForm";
 import { Card, PageHeader, StatusBadge } from "@/components/admin/ui";
+import { SOURCE_LABELS } from "@/lib/order-sources";
+import { whatsappLink } from "@/lib/whatsapp";
 import { db } from "@/lib/db";
 import { money } from "@/lib/format";
 import { getSettings } from "@/lib/settings";
 
 const flow = ["pending", "processing", "shipped", "delivered"];
 
-export default async function OrderDetail({ params }: { params: Promise<{ id: string }> }) {
+export default async function OrderDetail({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ created?: string }> }) {
   const { id } = await params;
+  const { created } = await searchParams;
   const [settings, order] = await Promise.all([getSettings(), db.order.findUnique({ where: { id }, include: { items: true } })]);
   if (!order) notFound();
   const m = (c: number) => money(c, settings.currency);
   const step = flow.indexOf(order.status);
+  // Only shown once costs are entered for the products in this order.
+  const cost = order.items.reduce((sum, i) => sum + i.unitCost * i.quantity, 0);
+  const profit = cost > 0 ? { cost, value: order.subtotal - order.discount - cost } : null;
+  const waNumber = order.phone ? `88${order.phone.replace(/^\+?88/, "")}` : "";
+  const statusText: Record<string, string> = {
+    pending: "আমরা আপনার অর্ডারটি পেয়েছি এবং শীঘ্রই কনফার্ম করব।",
+    processing: "আপনার অর্ডারটি কনফার্ম হয়েছে এবং প্রস্তুত করা হচ্ছে।",
+    shipped: `আপনার অর্ডারটি কুরিয়ারে পাঠানো হয়েছে${order.courier ? ` (${order.courier})` : ""}।${order.trackingCode ? ` ট্র্যাকিং নম্বর: ${order.trackingCode}` : ""}`,
+    delivered: "আপনার অর্ডারটি ডেলিভারি হয়েছে। কেনাকাটার জন্য ধন্যবাদ!",
+    cancelled: "আপনার অর্ডারটি বাতিল করা হয়েছে।",
+  };
+  const statusMessage = `আসসালামু আলাইকুম ${order.name}, ${settings.storeName} থেকে বলছি। অর্ডার #${order.number}: ${statusText[order.status] ?? ""} মোট: ${m(order.total)} (ক্যাশ অন ডেলিভারি)।`;
   const next = step >= 0 && step < flow.length - 1 ? flow[step + 1] : null;
 
   return (
@@ -21,8 +37,12 @@ export default async function OrderDetail({ params }: { params: Promise<{ id: st
       <Link href="/admin/orders" className="text-sm text-muted hover:underline">
         ← Orders
       </Link>
-      <PageHeader title={`Order #${order.number}`} subtitle={order.createdAt.toLocaleString("en-GB", { dateStyle: "long", timeStyle: "short" })}>
+      {created && <p className="mb-4 rounded-xl bg-emerald-50 px-4 py-3 text-sm text-emerald-800">✓ Order created and stock updated.</p>}
+      <PageHeader title={`Order #${order.number}`} subtitle={order.createdAt.toLocaleString("en-GB", { dateStyle: "long", timeStyle: "short", timeZone: "Asia/Dhaka" })}>
         <StatusBadge status={order.status} />
+        <Link href={`/admin/orders/${order.id}/invoice`} target="_blank" className="btn btn-ghost rounded-xl px-4 py-2 text-sm">
+          Print invoice
+        </Link>
       </PageHeader>
 
       <div className="grid gap-4 lg:grid-cols-[1.6fr_1fr]">
@@ -99,41 +119,72 @@ export default async function OrderDetail({ params }: { params: Promise<{ id: st
 
         <div className="space-y-4">
           <Card className="text-sm">
-            <p className="mb-2 font-semibold">Customer</p>
-            <p>{order.name}</p>
+            <div className="mb-2 flex items-center justify-between">
+              <p className="font-semibold">Customer</p>
+              <span className="rounded-full bg-[#f1efea] px-2.5 py-0.5 text-xs">via {SOURCE_LABELS[order.source] ?? order.source}</span>
+            </div>
+            <p className="font-medium">{order.name}</p>
             {order.phone && (
-              <>
-                <a href={`tel:${order.phone}`} className="block text-accent hover:underline">
-                  📞 {order.phone}
-                </a>
-                <a href={`https://wa.me/88${order.phone}`} target="_blank" rel="noopener noreferrer" className="block text-accent hover:underline">
-                  💬 WhatsApp the customer
-                </a>
-              </>
+              <a href={`tel:${order.phone}`} className="block text-accent hover:underline">
+                📞 {order.phone}
+              </a>
             )}
             {order.email && (
               <a href={`mailto:${order.email}`} className="block text-accent hover:underline">
                 {order.email}
               </a>
             )}
+            <p className="mt-2 text-muted">
+              {order.address}, {order.city} · {order.deliveryArea === "outside" ? "Outside Dhaka" : "Inside Dhaka"}
+            </p>
+            {order.note && <p className="mt-2 rounded-lg bg-sand p-2">“{order.note}”</p>}
+            {waNumber && (
+              <a
+                href={whatsappLink(waNumber, statusMessage)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn mt-3 w-full rounded-xl bg-[#25D366] py-2.5 text-white hover:bg-[#1ebe5b]"
+              >
+                WhatsApp the customer an update
+              </a>
+            )}
           </Card>
-          <Card className="text-sm">
-            <p className="mb-2 font-semibold">Ship to</p>
-            <p>{order.name}</p>
-            <p>{order.address}</p>
-            <p>{order.city}</p>
-            <p className="mt-2 font-medium">{order.deliveryArea === "outside" ? "Outside Dhaka" : "Inside Dhaka"}</p>
+          <Card>
+            <p className="mb-3 font-semibold">Delivery & notes</p>
+            <OrderDetailsForm
+              order={{
+                id: order.id,
+                name: order.name,
+                phone: order.phone,
+                email: order.email,
+                address: order.address,
+                city: order.city,
+                deliveryArea: order.deliveryArea,
+                courier: order.courier,
+                trackingCode: order.trackingCode,
+                adminNote: order.adminNote,
+              }}
+            />
           </Card>
-          {order.note && (
+          {profit && (
             <Card className="text-sm">
-              <p className="mb-2 font-semibold">Customer note</p>
-              <p className="whitespace-pre-line text-muted">{order.note}</p>
+              <p className="mb-2 font-semibold">Profit on this order</p>
+              <dl className="space-y-1">
+                <div className="flex justify-between">
+                  <dt className="text-muted">Products sold (after discount)</dt>
+                  <dd>{m(order.subtotal - order.discount)}</dd>
+                </div>
+                <div className="flex justify-between">
+                  <dt className="text-muted">Your product cost</dt>
+                  <dd>−{m(profit.cost)}</dd>
+                </div>
+                <div className="flex justify-between border-t border-line pt-1 font-semibold">
+                  <dt>Gross profit</dt>
+                  <dd className={profit.value >= 0 ? "text-emerald-700" : "text-red-600"}>{m(profit.value)}</dd>
+                </div>
+              </dl>
             </Card>
           )}
-          <Card className="text-sm">
-            <p className="mb-2 font-semibold">Payment</p>
-            <p>Cash on delivery</p>
-          </Card>
         </div>
       </div>
     </>

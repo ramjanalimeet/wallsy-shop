@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
+import { OutOfStockError, saveOrder } from "@/lib/orders";
 import { priceCart, type CartLine, type DeliveryArea } from "@/lib/pricing";
 import { getSettings } from "@/lib/settings";
 
@@ -67,7 +68,7 @@ export async function placeOrder(rawLines: unknown, customer: CustomerInput, cod
   if (!phone) return { error: "সঠিক মোবাইল নম্বর দিন (যেমন 01XXXXXXXXX)।" };
   if (email && !EMAIL.test(email)) return { error: "ইমেইল সঠিক নয়। না থাকলে ঘরটি খালি রাখুন।" };
   if (!get("address") || !get("city")) return { error: "সম্পূর্ণ ঠিকানা ও জেলা লিখুন।" };
-  const c = { name: get("name"), phone, email, address: get("address"), city: get("city"), note: get("note"), deliveryArea: area(customer?.deliveryArea), country: "Bangladesh" };
+  const c = { name: get("name"), phone, email, address: get("address"), city: get("city"), note: get("note"), deliveryArea: area(customer?.deliveryArea) };
 
   const settings = await getSettings();
   const cart = await priceCart(sanitizeLines(rawLines), settings, code, c.deliveryArea);
@@ -75,47 +76,29 @@ export async function placeOrder(rawLines: unknown, customer: CustomerInput, cod
   if (code && cart.discount.error) return { error: cart.discount.error };
 
   try {
-    const order = await db.$transaction(async (tx) => {
-      const qtyByProduct = new Map<string, number>();
-      for (const i of cart.items) qtyByProduct.set(i.product.id, (qtyByProduct.get(i.product.id) ?? 0) + i.quantity);
-      for (const [id, qty] of qtyByProduct) {
-        // Conditional decrement: fails if another order took the stock first.
-        const updated = await tx.product.updateMany({ where: { id, stock: { gte: qty } }, data: { stock: { decrement: qty } } });
-        if (updated.count === 0) {
-          const p = cart.items.find((i) => i.product.id === id)!.product;
-          throw new Error(`দুঃখিত, “${p.title}” মাত্র ${Math.max(0, p.stock)}টি স্টকে আছে।`);
-        }
-      }
-      if (cart.discount.code) await tx.discountCode.update({ where: { code: cart.discount.code }, data: { usedCount: { increment: 1 } } });
-
-      const last = await tx.order.findFirst({ orderBy: { number: "desc" }, select: { number: true } });
-      return tx.order.create({
-        data: {
-          number: (last?.number ?? 1000) + 1,
-          ...c,
-          subtotal: cart.subtotal,
-          discount: cart.discount.amount,
-          discountCode: cart.discount.code,
-          shipping: cart.shipping,
-          total: cart.total,
-          paymentMethod: "cod",
-          items: {
-            create: cart.items.map((i) => ({
-              productId: i.product.id,
-              title: i.product.title,
-              variant: i.variant?.name ?? "",
-              frame: i.frame,
-              image: JSON.parse(i.product.images)[0] ?? "",
-              unitPrice: i.unitPrice,
-              quantity: i.quantity,
-            })),
-          },
-        },
-      });
+    const order = await saveOrder({
+      customer: c,
+      subtotal: cart.subtotal,
+      discount: cart.discount.amount,
+      discountCode: cart.discount.code,
+      shipping: cart.shipping,
+      total: cart.total,
+      source: "website",
+      items: cart.items.map((i) => ({
+        productId: i.product.id,
+        title: i.product.title,
+        variant: i.variant?.name ?? "",
+        frame: i.frame,
+        image: JSON.parse(i.product.images)[0] ?? "",
+        unitPrice: i.unitPrice,
+        unitCost: i.unitCost,
+        quantity: i.quantity,
+      })),
     });
     revalidatePath("/", "layout");
     return { id: order.id };
   } catch (e) {
-    return { error: e instanceof Error && e.message.startsWith("দুঃখিত") ? e.message : "অর্ডার করা যায়নি। আবার চেষ্টা করুন অথবা WhatsApp-এ অর্ডার করুন।" };
+    if (e instanceof OutOfStockError) return { error: `দুঃখিত, “${e.title}” মাত্র ${e.available}টি স্টকে আছে।` };
+    return { error: "অর্ডার করা যায়নি। আবার চেষ্টা করুন অথবা WhatsApp-এ অর্ডার করুন।" };
   }
 }

@@ -19,6 +19,8 @@ export function CheckoutForm() {
   const [summary, setSummary] = useState<Summary | null>(null);
   const [code, setCode] = useState("");
   const [appliedCode, setAppliedCode] = useState<string | null>(null);
+  // Bumped on every Apply click so re-applying the same code re-checks it.
+  const [applyCount, setApplyCount] = useState(0);
   const [area, setArea] = useState<Area>("inside");
   const [error, setError] = useState<string | null>(null);
   const [placing, startPlacing] = useTransition();
@@ -37,7 +39,7 @@ export function CheckoutForm() {
     return () => {
       cancelled = true;
     };
-  }, [lines, appliedCode, area]);
+  }, [lines, appliedCode, area, applyCount]);
 
   const submit = (form: FormData) => {
     setError(null);
@@ -151,7 +153,7 @@ export function CheckoutForm() {
 
         <div className="mt-5 flex gap-2">
           <input value={code} onChange={(e) => setCode(e.target.value.toUpperCase())} placeholder="ডিসকাউন্ট কোড" className="input" />
-          <button type="button" onClick={() => setAppliedCode(code || null)} className="btn btn-ghost shrink-0 px-4 py-2">
+          <button type="button" onClick={() => (setAppliedCode(code || null), setApplyCount((n) => n + 1))} className="btn btn-ghost shrink-0 px-4 py-2">
             প্রয়োগ
           </button>
         </div>

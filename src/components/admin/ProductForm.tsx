@@ -3,9 +3,10 @@
 import { useState } from "react";
 import { saveProduct } from "@/app/admin/actions";
 import { ActionForm, SubmitButton } from "./ActionForm";
+import { GalleryField } from "./ImageUpload";
 import { Card, Field } from "./ui";
 
-type Variant = { name: string; price: string };
+type Variant = { name: string; price: string; cost: string };
 export type ProductFormValues = {
   id?: string;
   title: string;
@@ -14,6 +15,7 @@ export type ProductFormValues = {
   description: string;
   price: string;
   compareAtPrice: string;
+  costPrice: string;
   images: string[];
   stock: number;
   categoryId: string;
@@ -25,8 +27,8 @@ export type ProductFormValues = {
 
 export function ProductForm({ initial, categories, currency }: { initial: ProductFormValues; categories: { id: string; name: string }[]; currency: string }) {
   const [variants, setVariants] = useState<Variant[]>(initial.variants);
-  const [images, setImages] = useState(initial.images.join("\n"));
-  const previews = images.split("\n").map((s) => s.trim()).filter(Boolean);
+  const num = (v: string) => parseFloat(v) || 0;
+  const margin = (price: string, cost: string) => (num(price) > 0 && num(cost) > 0 ? Math.round(((num(price) - num(cost)) / num(price)) * 100) : null);
 
   const setVariant = (i: number, patch: Partial<Variant>) => setVariants((v) => v.map((row, j) => (j === i ? { ...row, ...patch } : row)));
 
@@ -53,37 +55,43 @@ export function ProductForm({ initial, categories, currency }: { initial: Produc
           </Field>
         </Card>
 
-        <Card className="space-y-3">
-          <Field label="Images" hint="One image URL per line. The first one is the main image. Use /art/… for the bundled artwork or any https:// link.">
-            <textarea name="images" rows={3} value={images} onChange={(e) => setImages(e.target.value)} className="input font-mono text-xs" />
-          </Field>
-          {previews.length > 0 && (
-            <div className="flex flex-wrap gap-2">
-              {previews.map((src, i) => (
-                <img key={src + i} src={src} alt="" className="h-24 w-[72px] rounded-md border border-line object-cover" />
-              ))}
-            </div>
-          )}
+        <Card>
+          <p className="mb-3 text-sm font-medium">Photos</p>
+          <GalleryField name="images" initial={initial.images} />
         </Card>
 
         <Card>
           <div className="mb-3 flex items-center justify-between">
             <div>
               <p className="text-sm font-medium">Sizes</p>
-              <p className="text-xs text-muted">Optional. Each size has its own price; the cheapest becomes the “from” price.</p>
+              <p className="text-xs text-muted">Each size has its own selling price. Add what it costs you to see your profit.</p>
             </div>
-            <button type="button" onClick={() => setVariants((v) => [...v, { name: "", price: "" }])} className="rounded-lg border border-line px-3 py-1.5 text-sm font-medium hover:bg-sand">
+            <button type="button" onClick={() => setVariants((v) => [...v, { name: "", price: "", cost: "" }])} className="rounded-lg border border-line px-3 py-1.5 text-sm font-medium hover:bg-sand">
               + Add size
             </button>
           </div>
+          {variants.length > 0 && (
+            <div className="mb-1 grid grid-cols-[1fr_7rem_7rem_3.5rem_1.5rem] gap-2 text-xs text-muted">
+              <span>Size</span>
+              <span>Selling price</span>
+              <span>Your cost</span>
+              <span>Margin</span>
+              <span />
+            </div>
+          )}
           <div className="space-y-2">
             {variants.map((v, i) => (
-              <div key={i} className="flex gap-2">
+              <div key={i} className="grid grid-cols-[1fr_7rem_7rem_3.5rem_1.5rem] items-center gap-2">
                 <input value={v.name} onChange={(e) => setVariant(i, { name: e.target.value })} placeholder="e.g. A3 · 30×42 cm" className="input" />
-                <div className="relative w-36 shrink-0">
+                <div className="relative">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted">{currency}</span>
-                  <input value={v.price} onChange={(e) => setVariant(i, { price: e.target.value })} inputMode="decimal" placeholder="0.00" className="input pl-8" />
+                  <input value={v.price} onChange={(e) => setVariant(i, { price: e.target.value })} inputMode="decimal" placeholder="0" className="input pl-7" />
                 </div>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted">{currency}</span>
+                  <input value={v.cost} onChange={(e) => setVariant(i, { cost: e.target.value })} inputMode="decimal" placeholder="0" className="input pl-7" />
+                </div>
+                <span className={`text-sm font-medium ${(margin(v.price, v.cost) ?? 0) < 0 ? "text-red-600" : "text-emerald-700"}`}>{margin(v.price, v.cost) ?? "—"}{margin(v.price, v.cost) !== null && "%"}</span>
                 <button type="button" onClick={() => setVariants((all) => all.filter((_, j) => j !== i))} className="px-2 text-muted hover:text-red-600" aria-label="Remove size">
                   ✕
                 </button>
@@ -117,6 +125,9 @@ export function ProductForm({ initial, categories, currency }: { initial: Produc
               <input name="compareAtPrice" inputMode="decimal" defaultValue={initial.compareAtPrice} className="input" />
             </Field>
           </div>
+          <Field label={`Your cost per print (${currency})`} hint={variants.length ? "Used if no sizes" : "What one print costs you, for profit tracking"}>
+            <input name="costPrice" inputMode="decimal" defaultValue={initial.costPrice} className="input" />
+          </Field>
           <Field label="Stock" hint="Shows “Only X left” at 10 or fewer">
             <input name="stock" type="number" min={0} defaultValue={initial.stock} className="input" />
           </Field>

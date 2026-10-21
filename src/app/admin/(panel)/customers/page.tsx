@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { deleteSubscriber } from "@/app/admin/actions";
 import { ConfirmButton } from "@/components/admin/ActionForm";
 import { Card, PageHeader } from "@/components/admin/ui";
@@ -38,7 +39,9 @@ export default async function CustomersPage() {
               {customers.map((c) => (
                 <tr key={c.phone}>
                   <td className="p-3">
-                    <span className="block font-medium">{c._max.name}</span>
+                    <Link href={`/admin/orders?q=${encodeURIComponent(c.phone)}`} className="block font-medium hover:underline">
+                      {c._max.name}
+                    </Link>
                     <a href={`tel:${c.phone}`} className="text-xs text-muted hover:underline">
                       {c.phone || "—"}
                     </a>

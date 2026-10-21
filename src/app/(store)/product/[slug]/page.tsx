@@ -7,6 +7,7 @@ import { ReviewForm } from "@/components/store/ReviewForm";
 import { getProduct, listProducts } from "@/lib/catalog";
 import { db } from "@/lib/db";
 import { formatDate, money } from "@/lib/format";
+import { getDeliveryText, getReturnText } from "@/lib/content";
 import { getSettings } from "@/lib/settings";
 
 type Props = { params: Promise<{ slug: string }> };
@@ -28,13 +29,13 @@ export default async function ProductPage({ params }: Props) {
     listProducts({ category: product.category?.slug, where: { id: { not: product.id } }, take: 4 }),
   ]);
 
-  const delivery = "ঢাকায় ১–২ দিন, ঢাকার বাইরে ৩–৫ দিনে ডেলিভারি";
+  const delivery = getDeliveryText(settings);
 
   const details = [
     ["বিবরণ", product.description],
     ["প্রিন্ট ও পেপার", "২৫০ জিএসএম প্রিমিয়াম ম্যাট আর্ট পেপার · দীর্ঘস্থায়ী পিগমেন্ট কালি · স্ট্যান্ডার্ড ফ্রেমে মাপমতো বসে।"],
     ["ডেলিভারি", `ঢাকার ভিতরে ডেলিভারি চার্জ ${money(settings.shippingFee, settings.currency)}, ঢাকার বাইরে ${money(settings.shippingFeeOutside, settings.currency)}। ${money(settings.freeShippingThreshold, settings.currency)} বা তার বেশি অর্ডারে ডেলিভারি ফ্রি। সারা বাংলাদেশে ক্যাশ অন ডেলিভারি।`],
-    ["রিটার্ন", "পণ্য হাতে পাওয়ার ৭ দিনের মধ্যে রিটার্ন করা যাবে। ডেলিভারিতে ভাঙা বা ক্ষতিগ্রস্ত হলে ছবি পাঠান, আমরা বিনামূল্যে নতুন পাঠাব।"],
+    ["রিটার্ন", getReturnText(settings)],
   ];
 
   const jsonLd = {

@@ -24,6 +24,7 @@ model Setting {
   shippingFee           Int     @default(7000) // inside Dhaka
   shippingFeeOutside    Int     @default(13000) // outside Dhaka
   framePrice            Int     @default(90000)
+  frameCost             Int     @default(0) // what one frame costs you, for profit tracking
   newsletterTitle       String  @default("প্রথম অর্ডারে ১০% ছাড় পান")
   newsletterText        String  @default("নতুন কালেকশন, ডেকোরেশন টিপস আর এক্সক্লুসিভ অফার সবার আগে পেতে যোগ দিন।")
   newsletterCode        String  @default("WELCOME10")
@@ -32,6 +33,11 @@ model Setting {
   // Digits only with country code, used for wa.me links
   whatsappNumber        String  @default("8801839295114")
   instagram             String  @default("")
+  // Storefront text editable from the dashboard. Empty means "use the built-in default".
+  faqJson               String  @default("")
+  trustJson             String  @default("")
+  deliveryText          String  @default("")
+  returnText            String  @default("")
   facebook              String  @default("")
 }
 
@@ -53,6 +59,7 @@ model Product {
   description    String      @default("")
   price          Int
   compareAtPrice Int?
+  costPrice      Int         @default(0) // what one print costs you (used when there are no sizes)
   images         String      @default("[]") // JSON array of image URLs
   stock          Int         @default(0)
   featured       Boolean     @default(false)
@@ -74,6 +81,7 @@ model Variant {
   product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
   name      String
   price     Int
+  cost      Int     @default(0) // what this size costs you
   sortOrder Int     @default(0)
 }
 
@@ -109,6 +117,10 @@ model Order {
   status        String      @default("pending") // pending | processing | shipped | delivered | cancelled
   // When the order was marked delivered: cash-on-delivery income counts from this date.
   deliveredAt   DateTime?
+  source        String      @default("website") // website | whatsapp | phone | facebook | instagram | other
+  courier       String      @default("")
+  trackingCode  String      @default("")
+  adminNote     String      @default("")
   items         OrderItem[]
   createdAt     DateTime    @default(now())
 }
@@ -124,6 +136,7 @@ model OrderItem {
   frame     String   @default("")
   image     String   @default("")
   unitPrice Int
+  unitCost  Int      @default(0) // cost to the store at the time of the order, for profit
   quantity  Int
 }
 
@@ -135,6 +148,7 @@ model DiscountCode {
   minSubtotal Int      @default(0)
   maxUses     Int?
   usedCount   Int      @default(0)
+  expiresAt   DateTime?
   active      Boolean  @default(true)
   createdAt   DateTime @default(now())
 }
@@ -156,4 +170,14 @@ model FinanceEntry {
   createdAt DateTime @default(now())
 
   @@index([date])
+}
+
+// Uploaded images (product photos, collection covers, hero), served from /api/img/[id].
+// Kept in the database so uploads work on Vercel without extra storage setup.
+model Image {
+  id          String   @id @default(cuid())
+  data        Bytes
+  contentType String
+  size        Int
+  createdAt   DateTime @default(now())
 }

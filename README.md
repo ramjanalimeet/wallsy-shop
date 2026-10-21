@@ -62,17 +62,18 @@ Totals are always recalculated on the server from the database, so prices can't 
 ## The dashboard (`/admin`)
 
 - **Overview**: revenue, orders and average order value with comparison to the previous period, a daily revenue chart, recent orders, top sellers and low-stock alerts
-- **Orders**: filter by status, search, a one-click "Mark as shipped/delivered" flow, and customer and address details. Cancelling an order puts its items back in stock.
-- **Products**: add or edit products, images, sizes and prices, compare-at (sale) price, stock, collection, and the Featured, Bestseller and Published toggles
-- **Collections**: create and reorder the categories shown in the menu and on the home page
-- **Discounts**: percentage or fixed codes with minimum spend and usage limits
-- **Reviews**: approve, hide or delete customer reviews (new reviews stay hidden until approved)
-- **Customers**: buyers ranked by total spend, plus newsletter subscribers
-- **Store settings**: store name, announcement, hero copy and image, currency symbol, shipping fee, free-shipping threshold, frame price, newsletter offer, contact details and social links
+- **Orders**: filter, search and export to CSV. Enter WhatsApp, phone and social media orders yourself with **New order**. Move each order through pending → shipped → delivered, add the courier, tracking number and a private note, edit the address, print an invoice, and send the customer a ready-made WhatsApp update. Cancelling an order restocks its items.
+- **Finance**: monthly income (delivered orders plus other income), product costs, expenses, net profit and margin. Ad spend shows cost per order and return on ad spend. There's a six-month chart and a form to record costs.
+- **Products**: upload photos from a phone or computer (resized automatically), set sizes with a selling price and your cost (the margin shows as you type), stock, sale price and collection. Duplicate products, and publish, hide or feature in bulk.
+- **Collections**: covers (upload), descriptions and menu order
+- **Discounts**: percentage or fixed codes with minimum spend, usage limit and expiry date. Codes can be edited.
+- **Reviews**: approve, hide or delete customer reviews
+- **Customers**: buyers by phone number with their total spend and orders, plus newsletter subscribers
+- **Store settings**: store name, announcement, hero text and image, delivery fees, frame price and frame cost, trust badges, FAQ, delivery and return text, newsletter offer, WhatsApp number and contact links
 
 ## Images
 
-The demo artwork is generated SVG in `public/art` (`node scripts/generate-art.mjs`). For real products, upload photos anywhere public (Cloudinary, S3, your CDN, or `public/`) and paste the URLs into the product form, one per line.
+Upload product photos, collection covers and the hero image straight from the dashboard. They're resized in the browser and stored in the database, so no extra storage service is needed. Image links (`https://…`) also work. The demo artwork is generated SVG in `public/art` (`node scripts/generate-art.mjs`).
 
 In production the app refuses the example password from `.env.example`.
 

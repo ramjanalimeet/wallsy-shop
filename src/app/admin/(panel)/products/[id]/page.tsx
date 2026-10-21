@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { deleteProduct } from "@/app/admin/actions";
+import { deleteProduct, duplicateProduct } from "@/app/admin/actions";
 import { ConfirmButton } from "@/components/admin/ActionForm";
 import { ProductForm } from "@/components/admin/ProductForm";
 import { PageHeader } from "@/components/admin/ui";
@@ -25,10 +25,14 @@ export default async function EditProductPage({ params, searchParams }: { params
       <Link href="/admin/products" className="text-sm text-muted hover:underline">
         ← Products
       </Link>
-      <PageHeader title={product.title} subtitle={created ? "✓ Product created" : undefined}>
+      <PageHeader title={product.title} subtitle={created ? "✓ Saved. Check the details, then publish it from the Visibility box." : undefined}>
         <Link href={`/product/${product.slug}`} target="_blank" className="btn btn-ghost px-4 py-2 text-sm">
           View on store ↗
         </Link>
+        <form action={duplicateProduct}>
+          <input type="hidden" name="id" value={product.id} />
+          <button className="btn btn-ghost rounded-xl px-4 py-2 text-sm">Duplicate</button>
+        </form>
         <form action={deleteProduct}>
           <input type="hidden" name="id" value={product.id} />
           <ConfirmButton message="Delete this product? This can't be undone." className="btn px-4 py-2 text-sm text-red-600 hover:bg-red-50">
@@ -47,13 +51,14 @@ export default async function EditProductPage({ params, searchParams }: { params
           description: product.description,
           price: decimal(product.price),
           compareAtPrice: decimal(product.compareAtPrice),
+          costPrice: product.costPrice ? decimal(product.costPrice) : "",
           images: parseImages(product.images),
           stock: product.stock,
           categoryId: product.categoryId ?? "",
           featured: product.featured,
           bestseller: product.bestseller,
           active: product.active,
-          variants: product.variants.map((v) => ({ name: v.name, price: decimal(v.price) })),
+          variants: product.variants.map((v) => ({ name: v.name, price: decimal(v.price), cost: v.cost ? decimal(v.cost) : "" })),
         }}
       />
     </>

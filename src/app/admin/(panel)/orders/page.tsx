@@ -1,5 +1,7 @@
 import Link from "next/link";
+import { PlusIcon } from "@/components/admin/icons";
 import { Empty, PageHeader, StatusBadge } from "@/components/admin/ui";
+import { SOURCE_LABELS } from "@/lib/order-sources";
 import { db } from "@/lib/db";
 import { formatDate, money } from "@/lib/format";
 import { getSettings } from "@/lib/settings";
@@ -21,7 +23,14 @@ export default async function OrdersPage({ searchParams }: { searchParams: Promi
 
   return (
     <>
-      <PageHeader title="Orders" subtitle="Cash-on-delivery orders. Update status as you pack, ship and deliver." />
+      <PageHeader title="Orders" subtitle="Website, WhatsApp and phone orders. Update the status as you pack, ship and deliver.">
+        <a href="/admin/orders-export" className="btn btn-ghost rounded-xl px-5 py-3">
+          Export CSV
+        </a>
+        <Link href="/admin/orders/new" className="btn btn-primary rounded-xl px-5 py-3">
+          <PlusIcon className="h-5 w-5" /> New order
+        </Link>
+      </PageHeader>
       <div className="mb-4 flex flex-wrap items-center gap-2">
         {tabs.map((t) => (
           <Link
@@ -47,7 +56,7 @@ export default async function OrdersPage({ searchParams }: { searchParams: Promi
                 <th className="p-3">Order</th>
                 <th className="p-3">Date</th>
                 <th className="p-3">Customer</th>
-                <th className="p-3">Items</th>
+                <th className="p-3">Source</th>
                 <th className="p-3">Status</th>
                 <th className="p-3 text-right">Total</th>
               </tr>
@@ -67,7 +76,7 @@ export default async function OrdersPage({ searchParams }: { searchParams: Promi
                       <span className="text-xs text-muted">{o.phone || o.email}</span>
                     </Link>
                   </td>
-                  <td className="p-3 text-muted">{o._count.items}</td>
+                  <td className="p-3 text-muted">{SOURCE_LABELS[o.source] ?? o.source}</td>
                   <td className="p-3">
                     <StatusBadge status={o.status} />
                   </td>

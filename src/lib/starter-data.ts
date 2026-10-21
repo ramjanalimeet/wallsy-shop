@@ -88,9 +88,9 @@ export async function loadStarterData(db: Db, { demo }: { demo: boolean }) {
         createdAt: new Date(Date.now() - (products.length - i) * 86400000 * 3),
         variants: {
           create: [
-            { name: "A4 · 21×30 cm", price: base, sortOrder: 0 },
-            { name: "A3 · 30×42 cm", price: base + 40000, sortOrder: 1 },
-            { name: "50×70 cm", price: base + 110000, sortOrder: 2 },
+            { name: "A4 · 21×30 cm", price: base, cost: demo ? Math.round(base * 0.4) : 0, sortOrder: 0 },
+            { name: "A3 · 30×42 cm", price: base + 40000, cost: demo ? Math.round((base + 40000) * 0.4) : 0, sortOrder: 1 },
+            { name: "50×70 cm", price: base + 110000, cost: demo ? Math.round((base + 110000) * 0.4) : 0, sortOrder: 2 },
           ],
         },
         reviews: !demo
@@ -129,6 +129,7 @@ export async function loadStarterData(db: Db, { demo }: { demo: boolean }) {
         frame: framed ? "Black" : "",
         image: JSON.parse(p.images)[0],
         unitPrice: p.price + 40000 + (framed ? 90000 : 0),
+        unitCost: Math.round((p.price + 40000) * 0.4) + (framed ? 45000 : 0),
         quantity: 1 + (k % 2),
       };
     });

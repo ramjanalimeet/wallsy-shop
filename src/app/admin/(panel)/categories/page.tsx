@@ -1,5 +1,6 @@
 import { deleteCategory, saveCategory } from "@/app/admin/actions";
 import { ActionForm, ConfirmButton, SubmitButton } from "@/components/admin/ActionForm";
+import { ImageField } from "@/components/admin/ImageUpload";
 import { Card, Field, PageHeader } from "@/components/admin/ui";
 import { db } from "@/lib/db";
 
@@ -16,8 +17,8 @@ function CategoryFields({ c }: { c?: { id: string; name: string; slug: string; d
       <Field label="Description" className="sm:col-span-2">
         <input name="description" defaultValue={c?.description} className="input" />
       </Field>
-      <Field label="Cover image URL">
-        <input name="image" defaultValue={c?.image} placeholder="/art/…" className="input" />
+      <Field label="Cover image" className="sm:col-span-2">
+        <ImageField name="image" initial={c?.image ?? ""} />
       </Field>
       <Field label="Order in menu">
         <input name="sortOrder" type="number" min={0} defaultValue={c?.sortOrder ?? 0} className="input" />

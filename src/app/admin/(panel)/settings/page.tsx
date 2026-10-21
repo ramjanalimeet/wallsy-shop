@@ -1,6 +1,9 @@
 import { saveSettings } from "@/app/admin/actions";
 import { ActionForm, SubmitButton } from "@/components/admin/ActionForm";
+import { FaqEditor, TrustEditor } from "@/components/admin/ContentEditors";
+import { ImageField } from "@/components/admin/ImageUpload";
 import { Card, Field, PageHeader } from "@/components/admin/ui";
+import { getDeliveryText, getFaq, getReturnText, getTrust } from "@/lib/content";
 import { getSettings } from "@/lib/settings";
 
 const decimal = (c: number) => (c / 100).toFixed(2);
@@ -41,13 +44,13 @@ export default async function SettingsPage() {
           <Field label="Subheading" className="sm:col-span-2">
             <textarea name="heroSubtitle" rows={2} defaultValue={s.heroSubtitle} className="input" />
           </Field>
-          <Field label="Main hero image URL" className="sm:col-span-2">
-            <input name="heroImage" defaultValue={s.heroImage} className="input" />
+          <Field label="Main hero image" className="sm:col-span-2">
+            <ImageField name="heroImage" initial={s.heroImage} />
           </Field>
         </Card>
 
-        <Card className="grid gap-4 sm:grid-cols-5">
-          <p className="font-semibold sm:col-span-5">Pricing & delivery</p>
+        <Card className="grid gap-4 sm:grid-cols-3">
+          <p className="font-semibold sm:col-span-3">Pricing & delivery</p>
           <Field label="Currency symbol">
             <input name="currency" defaultValue={s.currency} className="input" />
           </Field>
@@ -60,9 +63,30 @@ export default async function SettingsPage() {
           <Field label="Delivery: outside Dhaka">
             <input name="shippingFeeOutside" inputMode="decimal" defaultValue={decimal(s.shippingFeeOutside)} className="input" />
           </Field>
-          <Field label="Frame add-on price">
+          <Field label="Frame price (customer pays)">
             <input name="framePrice" inputMode="decimal" defaultValue={decimal(s.framePrice)} className="input" />
           </Field>
+          <Field label="Frame cost (you pay)" hint="Used to calculate profit">
+            <input name="frameCost" inputMode="decimal" defaultValue={decimal(s.frameCost)} className="input" />
+          </Field>
+          <Field label="Delivery time text" hint="Shown on product pages" className="sm:col-span-3">
+            <input name="deliveryText" defaultValue={getDeliveryText(s)} className="input" />
+          </Field>
+          <Field label="Return policy" hint="Shown on product pages" className="sm:col-span-3">
+            <textarea name="returnText" rows={2} defaultValue={getReturnText(s)} className="input" />
+          </Field>
+        </Card>
+
+        <Card>
+          <p className="mb-1 font-semibold">Trust badges</p>
+          <p className="mb-3 text-sm text-muted">The four promises shown under the home page banner.</p>
+          <TrustEditor name="trustJson" initial={getTrust(s)} />
+        </Card>
+
+        <Card>
+          <p className="mb-1 font-semibold">FAQ</p>
+          <p className="mb-3 text-sm text-muted">Questions and answers at the bottom of the home page.</p>
+          <FaqEditor name="faqJson" initial={getFaq(s)} />
         </Card>
 
         <Card className="grid gap-4 sm:grid-cols-2">

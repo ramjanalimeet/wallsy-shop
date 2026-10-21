@@ -6,6 +6,9 @@ import { adminConfigured, checkCredentials, createSession, destroySession, requi
 import { db } from "@/lib/db";
 import { parseDhakaDate } from "@/lib/finance";
 import { slugify } from "@/lib/format";
+import { ORDER_SOURCES } from "@/lib/order-sources";
+import { OutOfStockError, saveOrder } from "@/lib/orders";
+import { getSettings } from "@/lib/settings";
 
 type State = { ok?: boolean; error?: string } | null;
 
@@ -71,10 +74,14 @@ export async function saveProduct(_: State, form: FormData): Promise<State> {
     .filter(Boolean);
   if (!images.length) return { error: "Add at least one image URL." };
 
-  let variants: { name: string; price: number }[] = [];
+  let variants: { name: string; price: number; cost: number }[] = [];
   try {
-    variants = (JSON.parse(str(form, "variants", 20000) || "[]") as { name: string; price: string }[])
-      .map((v) => ({ name: String(v.name).trim().slice(0, 80), price: Math.round(parseFloat(String(v.price)) * 100) }))
+    variants = (JSON.parse(str(form, "variants", 20000) || "[]") as { name: string; price: string; cost?: string }[])
+      .map((v) => ({
+        name: String(v.name).trim().slice(0, 80),
+        price: Math.round(parseFloat(String(v.price)) * 100),
+        cost: Math.max(0, Math.round((parseFloat(String(v.cost ?? "")) || 0) * 100)),
+      }))
       .filter((v) => v.name && v.price > 0);
   } catch {
     return { error: "Couldn't read the size options." };
@@ -89,6 +96,7 @@ export async function saveProduct(_: State, form: FormData): Promise<State> {
     // With sizes, the cheapest one is the "from" price shown on cards.
     price: variants.length ? Math.min(...variants.map((v) => v.price)) : price,
     compareAtPrice: compare > 0 ? compare : null,
+    costPrice: cents(form, "costPrice"),
     images: JSON.stringify(images),
     stock: int(form, "stock"),
     categoryId: str(form, "categoryId") || null,
@@ -114,6 +122,30 @@ export async function deleteProduct(form: FormData) {
   await db.product.delete({ where: { id: str(form, "id") } });
   refresh();
   redirect("/admin/products");
+}
+
+/** Copies a product (photos, sizes, prices, costs) as a hidden draft to edit. */
+export async function duplicateProduct(form: FormData) {
+  await requireAdmin();
+  const p = await db.product.findUniqueOrThrow({ where: { id: str(form, "id") }, include: { variants: true } });
+  const copy = await db.product.create({
+    data: {
+      title: `${p.title} (copy)`,
+      slug: await uniqueSlug(`${p.slug}-copy`),
+      artist: p.artist,
+      description: p.description,
+      price: p.price,
+      compareAtPrice: p.compareAtPrice,
+      costPrice: p.costPrice,
+      images: p.images,
+      stock: p.stock,
+      categoryId: p.categoryId,
+      active: false,
+      variants: { create: p.variants.map((v) => ({ name: v.name, price: v.price, cost: v.cost, sortOrder: v.sortOrder })) },
+    },
+  });
+  refresh();
+  redirect(`/admin/products/${copy.id}?created=1`);
 }
 
 export async function toggleProduct(form: FormData) {
@@ -143,6 +175,22 @@ export async function bulkProducts(form: FormData) {
   else if (op === "feature") await db.product.updateMany({ where, data: { featured: true } });
   else if (op === "unfeature") await db.product.updateMany({ where, data: { featured: false } });
   refresh();
+}
+
+// ---------- Images ----------
+
+const IMAGE_TYPES = ["image/webp", "image/jpeg", "image/png", "image/gif", "image/avif"];
+const MAX_IMAGE_BYTES = 3 * 1024 * 1024;
+
+/** Stores an uploaded image (already resized in the browser) and returns its URL. */
+export async function uploadImage(form: FormData): Promise<{ url?: string; error?: string }> {
+  await requireAdmin();
+  const file = form.get("file");
+  if (!(file instanceof File)) return { error: "No file received." };
+  if (!IMAGE_TYPES.includes(file.type)) return { error: "Please upload a JPG, PNG or WebP image." };
+  if (file.size > MAX_IMAGE_BYTES) return { error: "That image is too large (max 3 MB)." };
+  const image = await db.image.create({ data: { data: Buffer.from(await file.arrayBuffer()), contentType: file.type, size: file.size } });
+  return { url: `/api/img/${image.id}` };
 }
 
 // ---------- Categories ----------
@@ -214,6 +262,104 @@ export async function deleteFinanceEntry(form: FormData) {
   revalidatePath("/admin/finance");
 }
 
+// ---------- Manual orders & order details ----------
+
+type ManualOrderPayload = {
+  customer: { name: string; phone: string; email: string; address: string; city: string; deliveryArea: string; note: string };
+  lines: { productId: string; variantId: string | null; frame: string; quantity: number; unitPrice: number }[];
+  shipping: number;
+  discount: number;
+  source: string;
+  status: string;
+  adminNote: string;
+};
+
+/** Saves an order taken over WhatsApp, phone or social media. Prices are in Taka, as typed. */
+export async function createManualOrder(payload: ManualOrderPayload): Promise<{ id?: string; error?: string }> {
+  await requireAdmin();
+  const t = (v: unknown, max = 300) => String(v ?? "").trim().slice(0, max);
+  const c = payload?.customer ?? ({} as ManualOrderPayload["customer"]);
+  if (!t(c.name)) return { error: "Enter the customer's name." };
+  if (!t(c.phone)) return { error: "Enter the customer's phone number." };
+  const lines = (payload.lines ?? []).filter((l) => l.productId && Number(l.quantity) > 0).slice(0, 50);
+  if (!lines.length) return { error: "Add at least one product." };
+
+  const settings = await getSettings();
+  const products = await db.product.findMany({ where: { id: { in: lines.map((l) => l.productId) } }, include: { variants: true } });
+  const items = [];
+  for (const l of lines) {
+    const p = products.find((x) => x.id === l.productId);
+    if (!p) return { error: "One of the products no longer exists." };
+    const v = p.variants.find((x) => x.id === l.variantId) ?? null;
+    const frame = ["Black", "White", "Oak"].includes(l.frame) ? l.frame : "";
+    const listPrice = (v?.price ?? p.price) + (frame ? settings.framePrice : 0);
+    const typed = Math.round(Number(l.unitPrice) * 100);
+    items.push({
+      productId: p.id,
+      title: p.title,
+      variant: v?.name ?? "",
+      frame,
+      image: JSON.parse(p.images)[0] ?? "",
+      unitPrice: typed > 0 ? typed : listPrice,
+      unitCost: (v?.cost || p.costPrice) + (frame ? settings.frameCost : 0),
+      quantity: Math.min(100, Math.floor(Number(l.quantity))),
+    });
+  }
+  const subtotal = items.reduce((s, i) => s + i.unitPrice * i.quantity, 0);
+  const discount = Math.min(subtotal, Math.max(0, Math.round(Number(payload.discount) * 100) || 0));
+  const shipping = Math.max(0, Math.round(Number(payload.shipping) * 100) || 0);
+  const phone = t(c.phone, 30).replace(/[\s-]/g, "");
+  try {
+    const order = await saveOrder({
+      customer: {
+        name: t(c.name),
+        phone: phone.match(/^(?:\+?88)?(01\d{9})$/)?.[1] ?? phone,
+        email: t(c.email),
+        address: t(c.address),
+        city: t(c.city),
+        note: t(c.note),
+        deliveryArea: c.deliveryArea === "outside" ? "outside" : "inside",
+      },
+      items,
+      subtotal,
+      discount,
+      discountCode: null,
+      shipping,
+      total: subtotal - discount + shipping,
+      source: (ORDER_SOURCES as readonly string[]).includes(payload.source) ? payload.source : "other",
+      status: STATUSES.includes(payload.status) ? payload.status : "pending",
+      adminNote: t(payload.adminNote, 1000),
+    });
+    refresh();
+    return { id: order.id };
+  } catch (e) {
+    if (e instanceof OutOfStockError) return { error: `Only ${e.available} of “${e.title}” left in stock. Update the stock first if you have more.` };
+    throw e;
+  }
+}
+
+/** Edits customer details, courier/tracking and the private note on an order. */
+export async function updateOrderDetails(_: State, form: FormData): Promise<State> {
+  await requireAdmin();
+  const id = str(form, "id");
+  await db.order.update({
+    where: { id },
+    data: {
+      name: str(form, "name", 200),
+      phone: str(form, "phone", 30),
+      email: str(form, "email", 200),
+      address: str(form, "address", 300),
+      city: str(form, "city", 100),
+      deliveryArea: str(form, "deliveryArea") === "outside" ? "outside" : "inside",
+      courier: str(form, "courier", 60),
+      trackingCode: str(form, "trackingCode", 100),
+      adminNote: str(form, "adminNote", 2000),
+    },
+  });
+  revalidatePath("/admin", "layout");
+  return { ok: true };
+}
+
 // ---------- Discounts ----------
 
 export async function saveDiscount(_: State, form: FormData): Promise<State> {
@@ -225,18 +371,23 @@ export async function saveDiscount(_: State, form: FormData): Promise<State> {
   if (!(raw > 0)) return { error: "Value must be greater than zero." };
   if (type === "percent" && raw > 100) return { error: "A percentage can't be more than 100." };
   const maxUses = parseInt(str(form, "maxUses"), 10);
+  const expiryDay = str(form, "expiresAt") ? parseDhakaDate(str(form, "expiresAt")) : null;
   const data = {
     code,
     type,
     value: type === "percent" ? Math.round(raw) : Math.round(raw * 100),
     minSubtotal: cents(form, "minSubtotal"),
     maxUses: maxUses > 0 ? maxUses : null,
-    active: true,
+    // Valid through the end of the chosen day (Dhaka time).
+    expiresAt: expiryDay ? new Date(expiryDay.getTime() + 86_400_000 - 1) : null,
   };
+  const id = str(form, "id") || undefined;
   const existing = await db.discountCode.findUnique({ where: { code } });
-  if (existing) return { error: `${code} already exists.` };
-  await db.discountCode.create({ data });
+  if (existing && existing.id !== id) return { error: `${code} already exists.` };
+  if (id) await db.discountCode.update({ where: { id }, data });
+  else await db.discountCode.create({ data: { ...data, active: true } });
   revalidatePath("/admin/discounts");
+  if (id) redirect("/admin/discounts");
   return { ok: true };
 }
 
@@ -296,6 +447,11 @@ export async function saveSettings(_: State, form: FormData): Promise<State> {
       shippingFeeOutside: cents(form, "shippingFeeOutside"),
       whatsappNumber: whatsappDigits(str(form, "whatsappNumber", 30)),
       framePrice: cents(form, "framePrice"),
+      frameCost: cents(form, "frameCost"),
+      deliveryText: str(form, "deliveryText", 300),
+      returnText: str(form, "returnText", 1000),
+      faqJson: str(form, "faqJson", 20000),
+      trustJson: str(form, "trustJson", 5000),
       newsletterTitle: str(form, "newsletterTitle", 120),
       newsletterText: str(form, "newsletterText", 300),
       newsletterCode: str(form, "newsletterCode", 40).toUpperCase(),

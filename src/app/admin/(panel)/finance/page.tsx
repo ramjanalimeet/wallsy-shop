@@ -24,14 +24,20 @@ export default async function FinancePage({ searchParams }: { searchParams: Prom
   const prev = history[history.length - 2];
   const margin = now.income ? Math.round((now.profit / now.income) * 100) : 0;
   const change = (a: number, b?: number) => (b ? Math.round(((a - b) / Math.abs(b)) * 100) : null);
-  const max = Math.max(1, ...history.flatMap((h) => [h.income, h.expenses]));
+  const max = Math.max(1, ...history.flatMap((h) => [h.income, h.totalCost]));
   const expenseCats = Object.entries(now.expenseByCategory).sort((a, b) => b[1] - a[1]);
 
   const kpis = [
     { label: "Income", value: m(now.income), delta: change(now.income, prev?.income), good: true },
-    { label: "Expenses", value: m(now.expenses), delta: change(now.expenses, prev?.expenses), good: false },
+    { label: "Costs & expenses", value: m(now.totalCost), delta: change(now.totalCost, prev?.totalCost), good: false },
     { label: "Net profit", value: m(now.profit), delta: change(now.profit, prev?.profit), good: true, tone: now.profit >= 0 ? "text-emerald-700" : "text-red-600" },
     { label: "Profit margin", value: `${margin}%`, delta: null, good: true },
+  ];
+  const adStats = [
+    { label: "Ad spend", value: m(now.adSpend) },
+    { label: "Orders delivered", value: String(now.orders) },
+    { label: "Ad cost per order", value: now.orders && now.adSpend ? m(Math.round(now.adSpend / now.orders)) : "—" },
+    { label: "Return on ad spend", value: now.adSpend ? `${(now.income / now.adSpend).toFixed(1)}×` : "—" },
   ];
 
   return (
@@ -65,6 +71,15 @@ export default async function FinancePage({ searchParams }: { searchParams: Prom
           </Card>
         ))}
       </div>
+      <div className="mt-4 grid grid-cols-2 gap-4 rounded-2xl border border-[#ece8e1] bg-white p-5 lg:grid-cols-4">
+        {adStats.map((a) => (
+          <div key={a.label}>
+            <p className="text-sm text-muted">{a.label}</p>
+            <p className="mt-1 text-lg font-semibold">{a.value}</p>
+          </div>
+        ))}
+        <p className="col-span-2 text-xs text-muted lg:col-span-4">Record Facebook/Google ad payments as an expense in “Marketing &amp; ads” to see these.</p>
+      </div>
       {pending._count > 0 && (
         <p className="mt-3 text-sm text-muted">
           Not counted yet: <strong className="text-ink">{m(pending._sum.total ?? 0)}</strong> cash on delivery from {pending._count} orders that aren&apos;t delivered. It&apos;s
@@ -80,7 +95,7 @@ export default async function FinancePage({ searchParams }: { searchParams: Prom
               <span className="h-2.5 w-2.5 rounded-sm bg-sage" /> Income
             </span>
             <span className="flex items-center gap-1.5">
-              <span className="h-2.5 w-2.5 rounded-sm bg-accent" /> Expenses
+              <span className="h-2.5 w-2.5 rounded-sm bg-accent" /> Costs & expenses
             </span>
           </div>
         </div>
@@ -89,7 +104,7 @@ export default async function FinancePage({ searchParams }: { searchParams: Prom
             <Link key={monthKey(h.month)} href={`/admin/finance?month=${monthKey(h.month)}`} className="group flex h-full flex-col justify-end">
               <div className="flex flex-1 items-end justify-center gap-1">
                 <div className="w-1/3 max-w-8 rounded-t-md bg-sage transition group-hover:opacity-80" style={{ height: `${Math.max(1, (h.income / max) * 100)}%` }} title={`Income ${m(h.income)}`} />
-                <div className="w-1/3 max-w-8 rounded-t-md bg-accent transition group-hover:opacity-80" style={{ height: `${Math.max(1, (h.expenses / max) * 100)}%` }} title={`Expenses ${m(h.expenses)}`} />
+                <div className="w-1/3 max-w-8 rounded-t-md bg-accent transition group-hover:opacity-80" style={{ height: `${Math.max(1, (h.totalCost / max) * 100)}%` }} title={`Costs ${m(h.totalCost)}`} />
               </div>
               <p className={`mt-2 text-center text-xs ${monthKey(h.month) === monthKey(month) ? "font-semibold text-ink" : "text-muted"}`}>{monthLabel(h.month, "short")}</p>
               <p className={`text-center text-xs font-medium ${h.profit >= 0 ? "text-emerald-700" : "text-red-600"}`}>{m(h.profit)}</p>
@@ -122,14 +137,29 @@ export default async function FinancePage({ searchParams }: { searchParams: Prom
                   <dt>Total income</dt>
                   <dd>{m(now.income)}</dd>
                 </div>
+                <div className="flex justify-between text-muted">
+                  <dt>Gross profit (after product costs)</dt>
+                  <dd>{m(now.grossProfit)}</dd>
+                </div>
               </dl>
             </Card>
             <Card>
               <p className="mb-3 font-semibold">Where the money went</p>
-              {expenseCats.length === 0 ? (
-                <p className="text-sm text-muted">No expenses recorded this month.</p>
+              {expenseCats.length === 0 && !now.productCost ? (
+                <p className="text-sm text-muted">No costs recorded this month.</p>
               ) : (
                 <ul className="space-y-3 text-sm">
+                  {now.productCost > 0 && (
+                    <li>
+                      <div className="flex justify-between">
+                        <span className="text-muted">Product costs (from orders)</span>
+                        <span className="font-medium">{m(now.productCost)}</span>
+                      </div>
+                      <div className="mt-1 h-1.5 rounded-full bg-[#f1efea]">
+                        <div className="h-full rounded-full bg-ink/70" style={{ width: `${(now.productCost / now.totalCost) * 100}%` }} />
+                      </div>
+                    </li>
+                  )}
                   {expenseCats.map(([c, v]) => (
                     <li key={c}>
                       <div className="flex justify-between">
@@ -137,7 +167,7 @@ export default async function FinancePage({ searchParams }: { searchParams: Prom
                         <span className="font-medium">{m(v)}</span>
                       </div>
                       <div className="mt-1 h-1.5 rounded-full bg-[#f1efea]">
-                        <div className="h-full rounded-full bg-accent" style={{ width: `${(v / now.expenses) * 100}%` }} />
+                        <div className="h-full rounded-full bg-accent" style={{ width: `${(v / now.totalCost) * 100}%` }} />
                       </div>
                     </li>
                   ))}
@@ -194,7 +224,7 @@ export default async function FinancePage({ searchParams }: { searchParams: Prom
 
         <Card className="h-fit">
           <p className="mb-1 font-semibold">Record money in or out</p>
-          <p className="mb-4 text-sm text-muted">Orders are counted automatically. Add your costs here, and any sales made outside the website.</p>
+          <p className="mb-4 text-sm text-muted">Orders and their product costs are counted automatically. Add other costs here (ads, packaging, rent…) and any sales not entered as orders.</p>
           <FinanceEntryForm currency={settings.currency} today={dhakaDateInput()} />
         </Card>
       </div>

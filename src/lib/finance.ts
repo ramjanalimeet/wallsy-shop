@@ -1,4 +1,5 @@
 import { db } from "./db";
+import { AD_CATEGORY } from "./finance-categories";
 
 // Bangladesh is UTC+6 all year (no daylight saving), so months are computed in Dhaka time.
 const DHAKA_OFFSET_MS = 6 * 60 * 60 * 1000;
@@ -55,7 +56,7 @@ export async function monthlySummary(from: Month, to: Month) {
     // Older delivered orders have no deliveredAt; fall back to when they were placed.
     db.order.findMany({
       where: { status: "delivered", OR: [{ deliveredAt: { gte: start, lt: end } }, { deliveredAt: null, createdAt: { gte: start, lt: end } }] },
-      select: { total: true, shipping: true, deliveredAt: true, createdAt: true },
+      select: { total: true, shipping: true, deliveredAt: true, createdAt: true, items: { select: { unitCost: true, quantity: true } } },
     }),
     db.financeEntry.findMany({ where: { date: { gte: start, lt: end } }, select: { type: true, category: true, amount: true, date: true } }),
   ]);
@@ -68,6 +69,8 @@ export async function monthlySummary(from: Month, to: Month) {
     deliveryCharges: 0,
     orders: 0,
     otherIncome: 0,
+    productCost: 0,
+    adSpend: 0,
     expenses: 0,
     expenseByCategory: {} as Record<string, number>,
     incomeByCategory: {} as Record<string, number>,
@@ -79,6 +82,7 @@ export async function monthlySummary(from: Month, to: Month) {
     if (!r) continue;
     r.sales += o.total - o.shipping;
     r.deliveryCharges += o.shipping;
+    r.productCost += o.items.reduce((sum, i) => sum + i.unitCost * i.quantity, 0);
     r.orders++;
   }
   for (const e of entries) {
@@ -89,12 +93,15 @@ export async function monthlySummary(from: Month, to: Month) {
       r.incomeByCategory[e.category] = (r.incomeByCategory[e.category] ?? 0) + e.amount;
     } else {
       r.expenses += e.amount;
+      if (e.category === AD_CATEGORY) r.adSpend += e.amount;
       r.expenseByCategory[e.category] = (r.expenseByCategory[e.category] ?? 0) + e.amount;
     }
   }
 
   return rows.map((r) => {
     const income = r.sales + r.deliveryCharges + r.otherIncome;
-    return { ...r, income, profit: income - r.expenses };
+    // Expenses here are the recorded ones (ads, rent…); product costs come from each order.
+    const totalCost = r.productCost + r.expenses;
+    return { ...r, income, totalCost, grossProfit: income - r.productCost, profit: income - totalCost };
   });
 }

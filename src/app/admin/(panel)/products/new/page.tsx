@@ -22,6 +22,7 @@ export default async function NewProductPage() {
           description: "",
           price: "",
           compareAtPrice: "",
+          costPrice: "",
           images: [],
           stock: 10,
           categoryId: "",
@@ -29,9 +30,9 @@ export default async function NewProductPage() {
           bestseller: false,
           active: true,
           variants: [
-            { name: "A4 · 21×30 cm", price: "" },
-            { name: "A3 · 30×42 cm", price: "" },
-            { name: "50×70 cm", price: "" },
+            { name: "A4 · 21×30 cm", price: "", cost: "" },
+            { name: "A3 · 30×42 cm", price: "", cost: "" },
+            { name: "50×70 cm", price: "", cost: "" },
           ],
         }}
       />

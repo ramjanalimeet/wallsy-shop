@@ -26,7 +26,8 @@ export async function priceCart(lines: CartLine[], settings: Settings, code?: st
     const frame = line.frame && (FRAMES as readonly string[]).includes(line.frame) ? line.frame : "";
     const quantity = Math.max(1, Math.min(20, Math.floor(line.quantity || 1)));
     const unitPrice = (variant?.price ?? p.price) + (frame ? settings.framePrice : 0);
-    items.push({ product: p, variant, frame, quantity, unitPrice });
+    const unitCost = (variant?.cost || p.costPrice) + (frame ? settings.frameCost : 0);
+    items.push({ product: p, variant, frame, quantity, unitPrice, unitCost });
   }
 
   const subtotal = items.reduce((s, i) => s + i.unitPrice * i.quantity, 0);
@@ -43,6 +44,7 @@ export async function evaluateDiscount(code: string | null | undefined, subtotal
   const row = await db.discountCode.findUnique({ where: { code: code.trim().toUpperCase() } });
   if (!row || !row.active) return { ...none, error: "কোডটি সঠিক নয়।" };
   if (row.maxUses != null && row.usedCount >= row.maxUses) return { ...none, error: "কোডটির মেয়াদ শেষ।" };
+  if (row.expiresAt && row.expiresAt < new Date()) return { ...none, error: "কোডটির মেয়াদ শেষ।" };
   if (subtotal < row.minSubtotal) return { ...none, error: `এই কোড ব্যবহার করতে কমপক্ষে ${money(row.minSubtotal, currency)} অর্ডার করুন।` };
   const amount = row.type === "percent" ? Math.round((subtotal * Math.min(row.value, 100)) / 100) : Math.min(row.value, subtotal);
   return { code: row.code, amount, error: null };
