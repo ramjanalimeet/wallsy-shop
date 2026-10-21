@@ -26,15 +26,15 @@ export default async function HomePage() {
     <>
       {/* Hero */}
       <section className="overflow-hidden">
-        <div className="container-x grid items-center gap-12 py-12 lg:grid-cols-2 lg:py-20">
+        <div className="container-x grid items-center gap-8 py-8 sm:gap-12 sm:py-12 lg:grid-cols-2 lg:py-20">
           <div>
             <p className="mb-5 inline-flex items-center gap-2 rounded-full border border-line bg-white px-3 py-1 text-xs font-semibold uppercase tracking-wider text-accent">
               <span className="h-1.5 w-1.5 rounded-full bg-accent" /> {settings.heroEyebrow}
             </p>
-            <h1 className="font-serif text-5xl leading-[1.05] tracking-tight sm:text-6xl lg:text-7xl">{settings.heroTitle}</h1>
+            <h1 className="font-serif text-[2.6rem] leading-[1.08] tracking-tight sm:text-6xl lg:text-7xl">{settings.heroTitle}</h1>
             <p className="mt-6 max-w-lg text-lg text-muted">{settings.heroSubtitle}</p>
-            <div className="mt-8 flex flex-wrap gap-3">
-              <Link href="/shop" className="btn btn-accent px-8">
+            <div className="mt-6 grid grid-cols-2 gap-3 sm:mt-8 sm:flex sm:flex-wrap">
+              <Link href="/shop" className="btn btn-accent px-4 sm:px-8">
                 {settings.heroCta} <ArrowIcon className="h-4 w-4" />
               </Link>
               {settings.whatsappNumber && (
@@ -42,9 +42,10 @@ export default async function HomePage() {
                   href={whatsappLink(settings.whatsappNumber, "আসসালামু আলাইকুম, আমি ওয়াল আর্ট অর্ডার করতে চাই।")}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="btn bg-[#25D366] text-white hover:bg-[#1ebe5b]"
+                  className="btn bg-[#25D366] px-4 text-white hover:bg-[#1ebe5b] sm:px-6"
                 >
-                  <WhatsAppIcon /> WhatsApp-এ অর্ডার
+                  <WhatsAppIcon /> <span className="sm:hidden">WhatsApp</span>
+                  <span className="hidden sm:inline">WhatsApp-এ অর্ডার</span>
                 </a>
               )}
             </div>
@@ -111,26 +112,26 @@ export default async function HomePage() {
       </section>
 
       {/* Categories */}
-      <section id="categories" className="container-x scroll-mt-20 py-20">
-        <div className="mb-10 flex items-end justify-between gap-4">
+      <section id="categories" className="container-x scroll-mt-20 py-12 sm:py-20">
+        <div className="mb-6 flex items-end justify-between gap-4 sm:mb-10">
           <div>
             <p className="text-sm font-semibold uppercase tracking-wider text-accent">আপনার স্টাইল খুঁজুন</p>
-            <h2 className="mt-2 font-serif text-4xl">কালেকশন</h2>
+            <h2 className="mt-2 font-serif text-3xl sm:text-4xl">কালেকশন</h2>
           </div>
           <Link href="/shop" className="hidden items-center gap-2 font-semibold hover:text-accent sm:flex">
             সব দেখুন <ArrowIcon className="h-4 w-4" />
           </Link>
         </div>
-        <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
+        <div className="rail -mx-4 flex gap-3 overflow-x-auto px-4 pb-1 sm:mx-0 sm:grid sm:grid-cols-3 sm:gap-4 sm:overflow-visible sm:px-0 lg:grid-cols-5">
           {categories.map((c) => (
-            <Link key={c.id} href={`/shop?category=${c.slug}`} className="group overflow-hidden rounded-2xl bg-sand">
-              <div className="p-6 pb-0">
+            <Link key={c.id} href={`/shop?category=${c.slug}`} className="group w-[38%] shrink-0 overflow-hidden rounded-2xl bg-sand sm:w-auto">
+              <div className="p-4 pb-0 sm:p-6 sm:pb-0">
                 <div className="framed transition-transform duration-500 group-hover:-translate-y-1">
                   {c.image && <img src={c.image} alt={c.name} loading="lazy" className="aspect-[3/4] w-full object-cover" />}
                 </div>
               </div>
-              <div className="flex items-center justify-between p-4">
-                <span className="font-semibold">{c.name}</span>
+              <div className="flex items-center justify-between p-3 sm:p-4">
+                <span className="text-sm font-semibold sm:text-base">{c.name}</span>
                 <ArrowIcon className="h-4 w-4 transition-transform group-hover:translate-x-1" />
               </div>
             </Link>
@@ -140,28 +141,30 @@ export default async function HomePage() {
 
       {/* Bestsellers */}
       {bestsellers.length > 0 && (
-        <section className="container-x py-4">
-          <div className="mb-10 flex items-end justify-between gap-4">
+        <section className="container-x py-2 sm:py-4">
+          <div className="mb-6 flex items-end justify-between gap-4 sm:mb-10">
             <div>
               <p className="text-sm font-semibold uppercase tracking-wider text-accent">সবচেয়ে জনপ্রিয়</p>
-              <h2 className="mt-2 font-serif text-4xl">বেস্টসেলার</h2>
+              <h2 className="mt-2 font-serif text-3xl sm:text-4xl">বেস্টসেলার</h2>
             </div>
             <Link href="/shop" className="flex items-center gap-2 font-semibold hover:text-accent">
               সব দেখুন <ArrowIcon className="h-4 w-4" />
             </Link>
           </div>
-          <div className="grid grid-cols-2 gap-x-4 gap-y-10 md:grid-cols-3 lg:grid-cols-4">
+          <div className="rail -mx-4 flex gap-3 overflow-x-auto px-4 pb-1 sm:mx-0 sm:grid sm:grid-cols-2 sm:gap-x-4 sm:gap-y-10 sm:overflow-visible sm:px-0 md:grid-cols-3 lg:grid-cols-4">
             {bestsellers.map((p) => (
-              <ProductCard key={p.id} product={p} currency={settings.currency} />
+              <div key={p.id} className="w-[44%] shrink-0 sm:w-auto">
+                <ProductCard product={p} currency={settings.currency} />
+              </div>
             ))}
           </div>
         </section>
       )}
 
       {/* Framing value prop */}
-      <section className="container-x py-20">
-        <div className="grid items-center gap-10 overflow-hidden rounded-[2rem] bg-[#ebe4d8] lg:grid-cols-2">
-          <div className="flex justify-center gap-6 p-10 sm:p-14">
+      <section className="container-x py-12 sm:py-20">
+        <div className="grid items-center gap-6 overflow-hidden rounded-[2rem] bg-[#ebe4d8] sm:gap-10 lg:grid-cols-2">
+          <div className="flex justify-center gap-4 p-8 pb-4 sm:gap-6 sm:p-14">
             {["", "framed-oak", "framed-white"].map((f, i) => {
               const p = bestsellers[i + 2] ?? bestsellers[i];
               return p ? (
@@ -173,9 +176,9 @@ export default async function HomePage() {
               ) : null;
             })}
           </div>
-          <div className="p-10 pt-0 lg:pl-0 lg:pt-10">
+          <div className="p-6 pt-0 sm:p-10 sm:pt-0 lg:pl-0 lg:pt-10">
             <p className="text-sm font-semibold uppercase tracking-wider text-accent">ফ্রেমসহ রেডি</p>
-            <h2 className="mt-2 font-serif text-4xl">বক্স খুলুন, দেয়ালে লাগান।</h2>
+            <h2 className="mt-2 font-serif text-3xl sm:text-4xl">বক্স খুলুন, দেয়ালে লাগান।</h2>
             <p className="mt-4 text-muted">যেকোনো প্রিন্টের সাথে মাত্র {money(settings.framePrice, settings.currency)} যোগ করে কাঠের ফ্রেম নিন। ম্যাট, গ্লাস আর হুকসহ পুরোপুরি তৈরি অবস্থায় পৌঁছাবে।</p>
             <ul className="mt-6 space-y-3">
               {["কালো, সাদা অথবা ন্যাচারাল ওক কাঠের ফ্রেম", "না-ভাঙা অ্যাক্রিলিক গ্লাস — বাচ্চাদের রুমেও নিরাপদ", "ঝোলানোর হুক সাথেই থাকে, কোনো টুল লাগবে না"].map((t) => (
@@ -193,20 +196,20 @@ export default async function HomePage() {
 
       {/* Reviews */}
       {reviews.length > 0 && (
-        <section className="bg-white py-20">
+        <section className="bg-white py-12 sm:py-20">
           <div className="container-x">
-            <div className="mb-10 text-center">
+            <div className="mb-6 text-center sm:mb-10">
               <Stars rating={avg} className="h-6 w-6" />
-              <h2 className="mt-3 font-serif text-4xl">ক্রেতারা যা বলছেন</h2>
+              <h2 className="mt-3 font-serif text-3xl sm:text-4xl">ক্রেতারা যা বলছেন</h2>
               <p className="mt-2 text-muted">
                 {ratingAgg._count}টি রিভিউতে গড় রেটিং {avg.toFixed(1)}/5
               </p>
             </div>
-            <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+            <div className="rail -mx-4 flex gap-3 overflow-x-auto px-4 pb-1 md:mx-0 md:grid md:grid-cols-2 md:gap-5 md:overflow-visible md:px-0 lg:grid-cols-3">
               {reviews.map((r) => (
-                <figure key={r.id} className="flex flex-col rounded-2xl border border-line bg-paper p-6">
+                <figure key={r.id} className="flex w-[82%] shrink-0 flex-col rounded-2xl border border-line bg-paper p-5 sm:p-6 md:w-auto">
                   <Stars rating={r.rating} />
-                  <blockquote className="mt-4 flex-1 text-lg leading-relaxed">“{r.body}”</blockquote>
+                  <blockquote className="mt-3 flex-1 leading-relaxed sm:mt-4 sm:text-lg">“{r.body}”</blockquote>
                   <figcaption className="mt-5 flex items-center justify-between text-sm">
                     <span className="font-semibold">
                       {r.name}
@@ -224,19 +227,21 @@ export default async function HomePage() {
 
       {/* New arrivals */}
       {newest.length > 0 && (
-        <section className="container-x py-20">
-          <div className="mb-10 flex items-end justify-between gap-4">
+        <section className="container-x py-12 sm:py-20">
+          <div className="mb-6 flex items-end justify-between gap-4 sm:mb-10">
             <div>
               <p className="text-sm font-semibold uppercase tracking-wider text-accent">এইমাত্র এসেছে</p>
-              <h2 className="mt-2 font-serif text-4xl">নতুন কালেকশন</h2>
+              <h2 className="mt-2 font-serif text-3xl sm:text-4xl">নতুন কালেকশন</h2>
             </div>
             <Link href="/shop?sort=newest" className="flex items-center gap-2 font-semibold hover:text-accent">
               সব নতুন দেখুন <ArrowIcon className="h-4 w-4" />
             </Link>
           </div>
-          <div className="grid grid-cols-2 gap-x-4 gap-y-10 lg:grid-cols-4">
+          <div className="rail -mx-4 flex gap-3 overflow-x-auto px-4 pb-1 sm:mx-0 sm:grid sm:grid-cols-2 sm:gap-x-4 sm:gap-y-10 sm:overflow-visible sm:px-0 md:grid-cols-3 lg:grid-cols-4">
             {newest.map((p) => (
-              <ProductCard key={p.id} product={p} currency={settings.currency} />
+              <div key={p.id} className="w-[44%] shrink-0 sm:w-auto">
+                <ProductCard product={p} currency={settings.currency} />
+              </div>
             ))}
           </div>
         </section>
@@ -244,8 +249,8 @@ export default async function HomePage() {
 
       {/* Newsletter */}
       <section className="container-x">
-        <div className="rounded-[2rem] bg-accent px-6 py-14 text-center text-white sm:px-14">
-          <h2 className="font-serif text-4xl">{settings.newsletterTitle}</h2>
+        <div className="rounded-[2rem] bg-accent px-5 py-10 text-center text-white sm:px-14 sm:py-14">
+          <h2 className="font-serif text-3xl sm:text-4xl">{settings.newsletterTitle}</h2>
           <p className="mx-auto mt-3 max-w-lg text-white/85">{settings.newsletterText}</p>
           <div className="mx-auto mt-8 max-w-md">
             <NewsletterForm code={settings.newsletterCode} dark />
@@ -254,8 +259,8 @@ export default async function HomePage() {
       </section>
 
       {/* FAQ */}
-      <section id="faq" className="container-x max-w-3xl scroll-mt-20 py-20">
-        <h2 className="mb-8 text-center font-serif text-4xl">সাধারণ জিজ্ঞাসা</h2>
+      <section id="faq" className="container-x max-w-3xl scroll-mt-20 py-12 sm:py-20">
+        <h2 className="mb-6 text-center font-serif text-3xl sm:mb-8 sm:text-4xl">সাধারণ জিজ্ঞাসা</h2>
         <div className="divide-y divide-line border-y border-line">
           {getFaq(settings).map(({ q, a }) => (
             <details key={q} className="group py-5">

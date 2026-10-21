@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ProductCard } from "@/components/store/ProductCard";
+import { SortSelect } from "@/components/store/SortSelect";
 import { listProducts, type SortKey } from "@/lib/catalog";
 import { db } from "@/lib/db";
 import { getSettings } from "@/lib/settings";
@@ -36,14 +37,14 @@ export default async function ShopPage({ searchParams }: { searchParams: Promise
   };
 
   return (
-    <div className="container-x py-12">
-      <div className="mb-8">
-        <h1 className="font-serif text-5xl">{sp.q ? `“${sp.q}” এর ফলাফল` : bestsellers ? "বেস্টসেলার" : (active?.name ?? "সব প্রিন্ট")}</h1>
+    <div className="container-x py-8 sm:py-12">
+      <div className="mb-6 sm:mb-8">
+        <h1 className="font-serif text-4xl sm:text-5xl">{sp.q ? `“${sp.q}” এর ফলাফল` : bestsellers ? "বেস্টসেলার" : (active?.name ?? "সব প্রিন্ট")}</h1>
         <p className="mt-3 max-w-xl text-muted">{bestsellers ? "আমাদের ক্রেতাদের সবচেয়ে পছন্দের প্রিন্টগুলো।" : (active?.description ?? "প্রিমিয়াম কোয়ালিটির ওয়াল আর্ট। সারা বাংলাদেশে ক্যাশ অন ডেলিভারি।")}</p>
       </div>
 
-      <div className="sticky top-16 z-30 -mx-4 mb-8 flex flex-col gap-3 border-y border-line bg-paper/95 px-4 py-3 backdrop-blur sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex gap-2 overflow-x-auto pb-1 sm:pb-0">
+      <div className="sticky top-[72px] z-30 -mx-4 mb-6 flex flex-col gap-3 border-y border-line bg-paper/95 px-4 py-3 backdrop-blur sm:mb-8 sm:flex-row sm:items-center sm:justify-between lg:top-20">
+        <div className="rail -mx-4 flex gap-2 overflow-x-auto px-4 sm:mx-0 sm:px-0">
           <Link href={href({ category: undefined, filter: undefined })} className={`shrink-0 rounded-full border px-4 py-1.5 text-sm font-medium ${!active && !bestsellers ? "border-ink bg-ink text-white" : "border-line bg-white hover:border-ink"}`}>
             সব
           </Link>
@@ -57,7 +58,11 @@ export default async function ShopPage({ searchParams }: { searchParams: Promise
             </Link>
           ))}
         </div>
-        <div className="flex shrink-0 items-center gap-2 text-sm">
+        <div className="flex items-center justify-between sm:hidden">
+          <span className="text-sm text-muted">{products.length}টি প্রিন্ট</span>
+          <SortSelect value={sort} options={sorts.map(([k, label]) => ({ key: k, label, href: href({ sort: k === "featured" ? undefined : k }) }))} />
+        </div>
+        <div className="hidden shrink-0 items-center gap-2 text-sm sm:flex">
           <span className="text-muted">{products.length}টি প্রিন্ট ·</span>
           <span className="text-muted">সাজান:</span>
           <div className="flex gap-1 overflow-x-auto">
@@ -79,7 +84,7 @@ export default async function ShopPage({ searchParams }: { searchParams: Promise
           </Link>
         </div>
       ) : (
-        <div className="grid grid-cols-2 gap-x-4 gap-y-10 md:grid-cols-3 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-x-3 gap-y-8 sm:gap-x-4 sm:gap-y-10 md:grid-cols-3 lg:grid-cols-4">
           {products.map((p) => (
             <ProductCard key={p.id} product={p} currency={settings.currency} />
           ))}

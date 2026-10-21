@@ -61,11 +61,11 @@ export function ProductPurchase({ product, delivery, children }: { product: Cata
     );
 
   return (
-    <div className="grid gap-10 lg:grid-cols-[1.15fr_1fr] lg:gap-16">
+    <div className="grid gap-6 sm:gap-10 lg:grid-cols-[1.15fr_1fr] lg:gap-16">
       <div className="lg:sticky lg:top-24 lg:self-start">
-        <div className="flex aspect-[4/5] items-center justify-center rounded-3xl bg-gradient-to-b from-[#ece4d8] to-[#ddd0bd] p-[14%]">
-          <div className={`framed ${frameCls} w-full max-w-md transition-all duration-300`}>
-            <img src={image} alt={product.title} className="aspect-[3/4] w-full object-cover" />
+        <div className="-mx-4 flex aspect-square items-center justify-center bg-gradient-to-b from-[#ece4d8] to-[#ddd0bd] p-[13%] sm:mx-0 sm:aspect-[4/5] sm:rounded-3xl sm:p-[14%]">
+          <div className={`framed ${frameCls} h-full max-h-full w-auto max-w-md transition-all duration-300 sm:h-auto sm:w-full`}>
+            <img src={image} alt={product.title} className="aspect-[3/4] h-full w-auto object-cover sm:h-auto sm:w-full" />
           </div>
         </div>
         {product.images.length > 1 && (
@@ -81,7 +81,7 @@ export function ProductPurchase({ product, delivery, children }: { product: Cata
 
       <div>
         {product.category && <p className="text-sm font-semibold uppercase tracking-wider text-accent">{product.category.name}</p>}
-        <h1 className="mt-2 font-serif text-4xl leading-tight sm:text-5xl">{product.title}</h1>
+        <h1 className="mt-1 font-serif text-[2rem] leading-tight sm:mt-2 sm:text-5xl">{product.title}</h1>
         <p className="mt-1 text-muted">আর্টিস্ট: {product.artist}</p>
         {product.reviewCount > 0 && (
           <a href="#reviews" className="mt-3 inline-flex items-center gap-2 text-sm">
@@ -90,7 +90,7 @@ export function ProductPurchase({ product, delivery, children }: { product: Cata
           </a>
         )}
 
-        <div className="mt-6 flex items-baseline gap-3">
+        <div className="mt-4 flex items-baseline gap-3 sm:mt-6">
           <span className="text-3xl font-semibold">{money(unitPrice, config.currency)}</span>
           {off > 0 && compareAt && (
             <>
@@ -101,17 +101,19 @@ export function ProductPurchase({ product, delivery, children }: { product: Cata
         </div>
 
         {product.variants.length > 0 && (
-          <fieldset className="mt-8">
+          <fieldset className="mt-6 sm:mt-8">
             <legend className="mb-3 text-sm font-semibold">সাইজ</legend>
             <div className="grid grid-cols-3 gap-2">
               {product.variants.map((v) => (
                 <button
                   key={v.id}
                   onClick={() => setVariantId(v.id)}
-                  className={`rounded-xl border px-3 py-3 text-left text-sm transition ${v.id === variantId ? "border-ink bg-white ring-1 ring-ink" : "border-line bg-white hover:border-ink"}`}
+                  className={`rounded-xl border px-2.5 py-2.5 text-left text-sm transition sm:px-3 sm:py-3 ${v.id === variantId ? "border-ink bg-white ring-1 ring-ink" : "border-line bg-white hover:border-ink"}`}
                 >
-                  <span className="block font-medium">{v.name}</span>
-                  <span className="text-muted">{money(v.price, config.currency)}</span>
+                  {/* "A3 · 30×42 cm": size name on top, measurements below, so nothing wraps mid-word. */}
+                  <span className="block font-medium leading-tight">{v.name.split(" · ")[0]}</span>
+                  {v.name.includes(" · ") && <span className="block text-xs leading-tight text-muted">{v.name.split(" · ").slice(1).join(" · ")}</span>}
+                  <span className="mt-1 block font-semibold">{money(v.price, config.currency)}</span>
                 </button>
               ))}
             </div>
@@ -122,14 +124,14 @@ export function ProductPurchase({ product, delivery, children }: { product: Cata
           <legend className="mb-3 text-sm font-semibold">
             ফ্রেম <span className="font-normal text-muted">· {frame ? `${frameLabel} (+${money(config.framePrice, config.currency)})` : "শুধু প্রিন্ট"}</span>
           </legend>
-          <div className="flex flex-wrap gap-2">
+          <div className="grid grid-cols-4 gap-2 sm:flex sm:flex-wrap">
             {frames.map((f) => (
               <button
                 key={f.label}
                 onClick={() => setFrame(f.name)}
-                className={`flex items-center gap-2 rounded-full border px-4 py-2 text-sm transition ${f.name === frame ? "border-ink bg-white ring-1 ring-ink" : "border-line bg-white hover:border-ink"}`}
+                className={`flex flex-col items-center gap-1 rounded-xl border px-1 py-2 text-xs transition sm:flex-row sm:gap-2 sm:rounded-full sm:px-4 sm:text-sm ${f.name === frame ? "border-ink bg-white ring-1 ring-ink" : "border-line bg-white hover:border-ink"}`}
               >
-                <span className={`h-4 w-4 rounded-full border border-line ${f.swatch}`} /> {f.label}
+                <span className={`h-5 w-5 rounded-full border border-line sm:h-4 sm:w-4 ${f.swatch}`} /> {f.label}
               </button>
             ))}
           </div>

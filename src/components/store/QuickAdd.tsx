@@ -1,6 +1,7 @@
 "use client";
 
 import type { CatalogProduct } from "@/lib/catalog";
+import { BagIcon } from "../icons";
 import { useCart } from "./CartProvider";
 
 export function QuickAdd({ product }: { product: CatalogProduct }) {
@@ -22,10 +23,12 @@ export function QuickAdd({ product }: { product: CatalogProduct }) {
           unitPrice: v?.price ?? product.price,
         })
       }
-      className="absolute right-3 top-3 translate-y-1 rounded-full bg-white px-3.5 py-2 text-xs font-semibold shadow-md transition hover:bg-ink hover:text-white md:opacity-0 md:group-hover:translate-y-0 md:group-hover:opacity-100"
+      className="absolute bottom-2.5 right-2.5 flex h-9 w-9 items-center justify-center rounded-full bg-white shadow-md transition hover:bg-ink hover:text-white md:bottom-auto md:right-3 md:top-3 md:h-auto md:w-auto md:translate-y-1 md:px-3.5 md:py-2 md:text-xs md:font-semibold md:opacity-0 md:group-hover:translate-y-0 md:group-hover:opacity-100"
       aria-label={`${product.title} কার্টে যোগ করুন`}
     >
-      + কার্টে নিন
+      {/* Phones: a round cart button in the corner, clear of the badges. Desktop: a pill on hover. */}
+      <BagIcon className="h-[18px] w-[18px] md:hidden" />
+      <span className="hidden md:inline">+ কার্টে নিন</span>
     </button>
   );
 }

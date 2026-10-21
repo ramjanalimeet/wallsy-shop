@@ -68,7 +68,7 @@ export function CheckoutForm() {
   ];
 
   return (
-    <form action={submit} className="grid gap-10 lg:grid-cols-[1.3fr_1fr]">
+    <form action={submit} className="grid gap-8 pb-24 lg:grid-cols-[1.3fr_1fr] lg:gap-10 lg:pb-0">
       <div className="space-y-8">
         <div className="flex flex-col items-start gap-3 rounded-2xl border border-[#25D366]/40 bg-[#25D366]/5 p-4 sm:flex-row sm:items-center">
           <p className="flex-1 text-sm">
@@ -192,6 +192,20 @@ export function CheckoutForm() {
         </button>
         <p className="mt-3 text-center text-xs text-muted">কোনো অ্যাকাউন্ট লাগবে না। অর্ডারের পর আমরা ফোনে কনফার্ম করব।</p>
       </aside>
+
+      {/* Phones: total and order button always in reach while filling the form. */}
+      <div className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-white/95 px-4 py-3 shadow-[0_-8px_24px_-12px_rgb(0_0_0/0.15)] backdrop-blur lg:hidden">
+        {error && <p className="mb-2 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
+        <div className="flex items-center gap-3">
+          <div className="shrink-0">
+            <p className="text-xs text-muted">সর্বমোট</p>
+            <p className="text-lg font-semibold">{summary ? money(summary.total, config.currency) : "…"}</p>
+          </div>
+          <button disabled={placing || !summary} className="btn btn-accent flex-1 py-3.5">
+            {placing ? "অর্ডার হচ্ছে…" : "অর্ডার কনফার্ম করুন"}
+          </button>
+        </div>
+      </div>
     </form>
   );
 }

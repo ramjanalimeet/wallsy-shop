@@ -50,7 +50,7 @@ export default async function ProductPage({ params }: Props) {
   };
 
   return (
-    <div className="container-x py-10">
+    <div className="container-x pb-10 pt-0 sm:py-10">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} />
       <ProductPurchase product={product} delivery={delivery}>
         <div className="mt-8 divide-y divide-line border-y border-line">
@@ -66,10 +66,10 @@ export default async function ProductPage({ params }: Props) {
         </div>
       </ProductPurchase>
 
-      <section id="reviews" className="mt-24 scroll-mt-24">
+      <section id="reviews" className="mt-16 scroll-mt-24 sm:mt-24">
         <div className="mb-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
           <div>
-            <h2 className="font-serif text-4xl">ক্রেতাদের রিভিউ</h2>
+            <h2 className="font-serif text-3xl sm:text-4xl">ক্রেতাদের রিভিউ</h2>
             {product.reviewCount > 0 && (
               <p className="mt-2 flex items-center gap-2 text-muted">
                 <Stars rating={product.rating} /> {product.rating.toFixed(1)}/5 · {product.reviewCount}টি রিভিউ
@@ -97,11 +97,13 @@ export default async function ProductPage({ params }: Props) {
       </section>
 
       {related.length > 0 && (
-        <section className="mt-24">
-          <h2 className="mb-8 font-serif text-4xl">আরও দেখুন</h2>
-          <div className="grid grid-cols-2 gap-x-4 gap-y-10 lg:grid-cols-4">
+        <section className="mt-16 sm:mt-24">
+          <h2 className="mb-6 font-serif text-3xl sm:mb-8 sm:text-4xl">আরও দেখুন</h2>
+          <div className="rail -mx-4 flex gap-3 overflow-x-auto px-4 pb-1 sm:mx-0 sm:grid sm:grid-cols-2 sm:gap-x-4 sm:gap-y-10 sm:overflow-visible sm:px-0 lg:grid-cols-4">
             {related.map((p) => (
-              <ProductCard key={p.id} product={p} currency={settings.currency} />
+              <div key={p.id} className="w-[44%] shrink-0 sm:w-auto">
+                <ProductCard product={p} currency={settings.currency} />
+              </div>
             ))}
           </div>
         </section>

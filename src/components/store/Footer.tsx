@@ -4,9 +4,9 @@ import { NewsletterForm } from "./NewsletterForm";
 
 export function Footer({ settings, categories }: { settings: Settings; categories: { name: string; slug: string }[] }) {
   return (
-    <footer className="mt-24 bg-ink text-white">
-      <div className="container-x grid gap-12 py-16 lg:grid-cols-[1.4fr_1fr_1fr_1fr]">
-        <div className="max-w-sm">
+    <footer className="mt-12 bg-ink text-white sm:mt-24">
+      <div className="container-x grid grid-cols-2 gap-x-6 gap-y-10 py-12 sm:py-16 lg:grid-cols-[1.4fr_1fr_1fr_1fr] lg:gap-12">
+        <div className="col-span-2 max-w-sm lg:col-span-1">
           <p className="font-serif text-3xl">
             {settings.storeName}
             <span className="text-accent">.</span>

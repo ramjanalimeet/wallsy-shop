@@ -35,6 +35,11 @@ body {
     0 1px 2px rgb(0 0 0 / 0.08),
     0 18px 40px -12px rgb(40 30 20 / 0.35);
 }
+@media (max-width: 639px) {
+  .framed {
+    border-width: 7px;
+  }
+}
 .framed-oak {
   border-color: #b98a5a;
 }
@@ -95,6 +100,12 @@ body {
   font-size: 0.95rem;
   outline: none;
 }
+/* 16px on phones: iOS zooms into any field with smaller text when it's tapped. */
+@media (max-width: 639px) {
+  .input {
+    font-size: 16px;
+  }
+}
 .input:focus {
   border-color: var(--color-ink);
   box-shadow: 0 0 0 3px rgb(28 27 25 / 0.08);
@@ -128,6 +139,21 @@ body {
 }
 .animate-fade-in {
   animation: fade-in 0.2s ease-out;
+}
+
+/* Horizontal swipe rows on phones (collections, products, reviews). */
+.rail {
+  scrollbar-width: none;
+  scroll-snap-type: x mandatory;
+  /* Snap cards to the page margin, not the screen edge. */
+  scroll-padding-inline: 1rem;
+  -webkit-overflow-scrolling: touch;
+}
+.rail::-webkit-scrollbar {
+  display: none;
+}
+.rail > * {
+  scroll-snap-align: start;
 }
 
 @keyframes marquee {

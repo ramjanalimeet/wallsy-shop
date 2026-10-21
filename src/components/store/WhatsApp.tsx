@@ -1,5 +1,6 @@
 "use client";
 
+import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { orderMessage, whatsappLink, type WhatsAppItem } from "@/lib/whatsapp";
 import { useCart } from "./CartProvider";
@@ -44,16 +45,18 @@ export function WhatsAppOrderButton({
 
 export function WhatsAppFloat() {
   const { config } = useCart();
-  if (!config.whatsappNumber) return null;
+  const pathname = usePathname();
+  // Product and checkout pages have their own WhatsApp buttons; the bubble would cover them.
+  if (!config.whatsappNumber || pathname.startsWith("/product/") || pathname === "/checkout") return null;
   return (
     <a
       href={whatsappLink(config.whatsappNumber, "আসসালামু আলাইকুম, আমি একটি ওয়াল আর্ট সম্পর্কে জানতে চাই।")}
       target="_blank"
       rel="noopener noreferrer"
       aria-label="WhatsApp-এ মেসেজ করুন"
-      className="fixed bottom-24 right-4 z-30 flex h-14 w-14 items-center justify-center rounded-full bg-[#25D366] text-white shadow-xl transition hover:scale-105 md:bottom-6 md:right-6"
+      className="fixed bottom-5 right-4 z-30 flex h-12 w-12 items-center justify-center rounded-full bg-[#25D366] text-white shadow-xl transition hover:scale-105 md:bottom-6 md:right-6 md:h-14 md:w-14"
     >
-      <WhatsAppIcon className="h-7 w-7" />
+      <WhatsAppIcon className="h-6 w-6 md:h-7 md:w-7" />
     </a>
   );
 }
