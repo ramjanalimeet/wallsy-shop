@@ -34,7 +34,7 @@ npm run dev               # tables and the starter catalog are created on the fi
 
 ### Changing the database schema
 
-The tables are created from `src/lib/schema-sql.ts`, which `npm run build` regenerates from `prisma/schema.prisma`. That only covers a brand-new database. If you change the schema after launch, apply it to the existing database with `npx prisma db push`.
+Edit `prisma/schema.prisma` and deploy. `npm run build` turns it into idempotent SQL (`src/lib/schema-sql.ts`), and on startup the app adds any missing tables, columns, indexes and foreign keys, then records the version in a `_WallsyMeta` table. Give new required columns a `@default(...)` so they can be added to tables that already have rows. Renames and removals still need a manual migration.
 
 ## What's in the storefront
 

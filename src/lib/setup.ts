@@ -2,33 +2,53 @@ import "server-only";
 import { cache } from "react";
 import { databaseUrl } from "./database-url.mjs";
 import { prisma as db } from "./prisma-client";
-import { SCHEMA_SQL } from "./schema-sql";
+import { SCHEMA_SQL, SCHEMA_VERSION } from "./schema-sql";
 import { loadStarterData } from "./starter-data";
 
-// Arbitrary key so concurrent first requests don't both create tables or load the catalog.
-const SETUP_LOCK = 727_274;
+// Records which schema version the database was last brought up to.
+const META_TABLE = `CREATE TABLE IF NOT EXISTS "_WallsyMeta" ("key" TEXT PRIMARY KEY, "value" TEXT NOT NULL)`;
 
-type Client = Pick<typeof db, "$queryRaw">;
-
-// Reads pg_class directly rather than to_regclass(), whose cached lookup can miss a
-// table another server created a moment ago.
-async function tablesExist(client: Client = db) {
-  const [{ exists }] = await client.$queryRaw<{ exists: boolean }[]>`
-    SELECT EXISTS (
-      SELECT 1 FROM pg_catalog.pg_class c JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
-      WHERE n.nspname = 'public' AND c.relname = 'Setting'
-    ) AS exists`;
-  return exists;
+async function recordedVersion() {
+  try {
+    const rows = await db.$queryRaw<{ value: string }[]>`SELECT "value" FROM "_WallsyMeta" WHERE "key" = 'schema'`;
+    return rows[0]?.value ?? null;
+  } catch {
+    return null; // table doesn't exist yet
+  }
 }
 
-/** Creates the tables and loads the starter catalog the first time the store runs. */
+/**
+ * Brings the database up to date: creates or upgrades tables when a new version is
+ * deployed and loads the starter catalog into an empty store. A no-op once current.
+ */
 async function initialize() {
-  if ((await tablesExist()) && (await db.setting.count()) > 0) return;
+  if ((await recordedVersion()) === SCHEMA_VERSION) return;
+
+  try {
+    await db.$executeRawUnsafe(META_TABLE);
+  } catch {
+    // Another server created it at the same moment.
+  }
+
   await db.$transaction(
     async (tx) => {
-      await tx.$executeRaw`SELECT pg_advisory_xact_lock(${SETUP_LOCK})`;
-      if (!(await tablesExist(tx))) for (const statement of SCHEMA_SQL) await tx.$executeRawUnsafe(statement);
-      if ((await tx.setting.count()) === 0) await loadStarterData(tx, { demo: false });
+      // Serializes setup across servers. Locking a table (unlike an advisory lock) also
+      // refreshes Postgres's catalog cache, so tables another server just created are seen.
+      await tx.$executeRawUnsafe(`LOCK TABLE "_WallsyMeta" IN EXCLUSIVE MODE`);
+      const rows = await tx.$queryRaw<{ value: string }[]>`SELECT "value" FROM "_WallsyMeta" WHERE "key" = 'schema'`;
+      if (rows[0]?.value === SCHEMA_VERSION) return;
+
+      for (const statement of SCHEMA_SQL) await tx.$executeRawUnsafe(statement);
+
+      const settings = await tx.setting.findUnique({ where: { id: 1 }, select: { currency: true } });
+      const orders = await tx.order.count();
+      // An untouched store from the first, dollar-priced release: swap in the Taka catalog.
+      const legacyStarter = settings?.currency === "$" && orders === 0;
+      if (!settings || legacyStarter) await loadStarterData(tx, { demo: false });
+
+      await tx.$executeRaw`
+        INSERT INTO "_WallsyMeta" ("key", "value") VALUES ('schema', ${SCHEMA_VERSION})
+        ON CONFLICT ("key") DO UPDATE SET "value" = EXCLUDED."value"`;
     },
     { timeout: 60_000, maxWait: 30_000 }
   );
@@ -36,7 +56,7 @@ async function initialize() {
 
 let ready: Promise<void> | null = null;
 
-/** Runs first-time setup once per server instance; retried on the next call if it fails. */
+/** Runs setup once per server instance; retried on the next call if it fails. */
 export function ensureDatabase() {
   ready ??= initialize().catch((e) => {
     ready = null;

@@ -12,8 +12,7 @@ try {
 const db = new PrismaClient({ datasourceUrl: databaseUrl() });
 
 async function main() {
-  const [{ exists }] = await db.$queryRaw<{ exists: boolean }[]>`SELECT to_regclass('public."Setting"') IS NOT NULL AS exists`;
-  if (!exists) for (const statement of SCHEMA_SQL) await db.$executeRawUnsafe(statement);
+  for (const statement of SCHEMA_SQL) await db.$executeRawUnsafe(statement);
   await loadStarterData(db, { demo: true });
   console.log("Loaded the demo store with sample reviews and orders.");
 }

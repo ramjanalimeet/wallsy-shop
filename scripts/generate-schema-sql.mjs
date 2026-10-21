@@ -1,14 +1,44 @@
-// Turns prisma/schema.prisma into the SQL the app runs to create its tables on first visit,
-// so deploys never need database access at build time. Runs as part of `npm run build`.
+// Turns prisma/schema.prisma into SQL the app runs on startup, so deploys never need
+// database access at build time. Every statement is idempotent: it creates what's
+// missing (tables, columns, indexes, foreign keys) and leaves existing data alone, so
+// the same SQL both sets up a new database and upgrades one made by an older version.
+// Runs as part of `npm run build`.
 import { execSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { readFileSync, writeFileSync } from "node:fs";
 
 const sql = execSync("npx prisma migrate diff --from-empty --to-schema-datamodel prisma/schema.prisma --script", { encoding: "utf8" });
-const statements = sql
+const raw = sql
   .split(/;\s*\n/)
   .map((s) => s.replace(/^--.*$/gm, "").trim())
   .filter(Boolean);
+
+const statements = [];
+for (const stmt of raw) {
+  const table = stmt.match(/^CREATE TABLE "([^"]+)" \(/);
+  if (table) {
+    statements.push(stmt.replace(/^CREATE TABLE/, "CREATE TABLE IF NOT EXISTS"));
+    // Columns added to the schema after the table was first created.
+    for (const line of stmt.split("\n").slice(1)) {
+      const col = line.trim().replace(/,$/, "");
+      const name = col.match(/^"([^"]+)"/)?.[1];
+      if (!name) continue;
+      if (/NOT NULL/.test(col) && !/DEFAULT/.test(col))
+        // Can't add a required column without a default to a table that has rows.
+        statements.push(`DO $$ BEGIN ALTER TABLE "${table[1]}" ADD COLUMN IF NOT EXISTS ${col}; EXCEPTION WHEN not_null_violation THEN RAISE WARNING 'Add a default for ${table[1]}.${name}'; END $$`);
+      else statements.push(`ALTER TABLE "${table[1]}" ADD COLUMN IF NOT EXISTS ${col}`);
+      const def = col.match(/ DEFAULT (.+)$/)?.[1];
+      if (def) statements.push(`ALTER TABLE "${table[1]}" ALTER COLUMN "${name}" SET DEFAULT ${def}`);
+    }
+  } else if (/^CREATE (UNIQUE )?INDEX "/.test(stmt)) {
+    statements.push(stmt.replace(/^CREATE (UNIQUE )?INDEX/, (m) => `${m} IF NOT EXISTS`));
+  } else if (/^ALTER TABLE .* ADD CONSTRAINT/.test(stmt)) {
+    statements.push(`DO $$ BEGIN ${stmt}; EXCEPTION WHEN duplicate_object THEN NULL; END $$`);
+  } else {
+    statements.push(stmt);
+  }
+}
+
 const version = createHash("sha256").update(readFileSync("prisma/schema.prisma")).digest("hex").slice(0, 12);
 
 writeFileSync(
