@@ -1,0 +1,140 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// Single-row table holding everything the dashboard can change about the storefront.
+model Setting {
+  id                    Int     @id @default(1)
+  storeName             String  @default("Wallsy")
+  tagline               String  @default("Art that makes a house feel like home")
+  announcement          String  @default("Free shipping on orders over $60 · 30-day happy returns")
+  announcementEnabled   Boolean @default(true)
+  heroEyebrow           String  @default("New collection · Autumn 2026")
+  heroTitle             String  @default("Walls worth staring at.")
+  heroSubtitle          String  @default("Museum-grade prints from independent artists, framed and shipped ready to hang.")
+  heroCta               String  @default("Shop bestsellers")
+  heroImage             String  @default("/art/sunset-dunes.svg")
+  currency              String  @default("$")
+  freeShippingThreshold Int     @default(6000)
+  shippingFee           Int     @default(599)
+  framePrice            Int     @default(2500)
+  newsletterTitle       String  @default("Get 10% off your first order")
+  newsletterText        String  @default("New drops, interior tips and members-only sales, straight to your inbox.")
+  newsletterCode        String  @default("WELCOME10")
+  contactEmail          String  @default("hello@wallsy.shop")
+  contactPhone          String  @default("")
+  instagram             String  @default("")
+  facebook              String  @default("")
+}
+
+model Category {
+  id          String    @id @default(cuid())
+  name        String
+  slug        String    @unique
+  description String    @default("")
+  image       String    @default("")
+  sortOrder   Int       @default(0)
+  products    Product[]
+}
+
+model Product {
+  id             String      @id @default(cuid())
+  title          String
+  slug           String      @unique
+  artist         String      @default("")
+  description    String      @default("")
+  price          Int
+  compareAtPrice Int?
+  images         String      @default("[]") // JSON array of image URLs
+  stock          Int         @default(0)
+  featured       Boolean     @default(false)
+  bestseller     Boolean     @default(false)
+  active         Boolean     @default(true)
+  categoryId     String?
+  category       Category?   @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  variants       Variant[]
+  reviews        Review[]
+  orderItems     OrderItem[]
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+}
+
+// Size options. A product without variants sells at its base price.
+model Variant {
+  id        String  @id @default(cuid())
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  name      String
+  price     Int
+  sortOrder Int     @default(0)
+}
+
+model Review {
+  id        String   @id @default(cuid())
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  name      String
+  rating    Int
+  body      String
+  approved  Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model Order {
+  id            String      @id @default(cuid())
+  number        Int         @unique
+  email         String
+  name          String
+  phone         String      @default("")
+  address       String
+  city          String
+  zip           String      @default("")
+  country       String
+  note          String      @default("")
+  subtotal      Int
+  discount      Int         @default(0)
+  shipping      Int
+  total         Int
+  discountCode  String?
+  paymentMethod String      @default("cod")
+  status        String      @default("pending") // pending | processing | shipped | delivered | cancelled
+  items         OrderItem[]
+  createdAt     DateTime    @default(now())
+}
+
+model OrderItem {
+  id        String   @id @default(cuid())
+  orderId   String
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId String?
+  product   Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+  title     String
+  variant   String   @default("")
+  frame     String   @default("")
+  image     String   @default("")
+  unitPrice Int
+  quantity  Int
+}
+
+model DiscountCode {
+  id          String   @id @default(cuid())
+  code        String   @unique
+  type        String   @default("percent") // percent | fixed
+  value       Int // percent (e.g. 10) or minor currency units (e.g. 500 = 5.00)
+  minSubtotal Int      @default(0)
+  maxUses     Int?
+  usedCount   Int      @default(0)
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+}
+
+model Subscriber {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  createdAt DateTime @default(now())
+}

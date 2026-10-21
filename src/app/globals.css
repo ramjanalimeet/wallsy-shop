@@ -1,0 +1,150 @@
+@import "tailwindcss";
+
+@theme {
+  --color-paper: #faf7f2;
+  --color-sand: #f1ebe1;
+  --color-ink: #1c1b19;
+  --color-muted: #6f6a62;
+  --color-line: #e7e1d7;
+  --color-accent: #c4553a;
+  --color-accent-dark: #a6432b;
+  --color-sage: #5f7d69;
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-fraunces), Georgia, serif;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--color-paper);
+  color: var(--color-ink);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* In the components layer so Tailwind utilities can override these. */
+@layer components {
+/* A print displayed inside a frame with a white mat. */
+.framed {
+  background: #fff;
+  padding: 7%;
+  border: 10px solid #1f1d1a;
+  box-shadow:
+    0 1px 2px rgb(0 0 0 / 0.08),
+    0 18px 40px -12px rgb(40 30 20 / 0.35);
+}
+.framed-oak {
+  border-color: #b98a5a;
+}
+.framed-white {
+  border-color: #f4f1ec;
+}
+.framed-none {
+  padding: 0;
+  border: 0;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 9999px;
+  padding: 0.85rem 1.6rem;
+  font-weight: 600;
+  font-size: 0.95rem;
+  transition: background 0.15s, transform 0.15s, color 0.15s;
+}
+.btn:active {
+  transform: scale(0.98);
+}
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.btn-primary {
+  background: var(--color-ink);
+  color: #fff;
+}
+.btn-primary:hover {
+  background: #000;
+}
+.btn-accent {
+  background: var(--color-accent);
+  color: #fff;
+}
+.btn-accent:hover {
+  background: var(--color-accent-dark);
+}
+.btn-ghost {
+  border: 1px solid var(--color-ink);
+}
+.btn-ghost:hover {
+  background: var(--color-ink);
+  color: #fff;
+}
+
+.input {
+  width: 100%;
+  border: 1px solid var(--color-line);
+  background: #fff;
+  border-radius: 0.6rem;
+  padding: 0.7rem 0.9rem;
+  font-size: 0.95rem;
+  outline: none;
+}
+.input:focus {
+  border-color: var(--color-ink);
+  box-shadow: 0 0 0 3px rgb(28 27 25 / 0.08);
+}
+
+.container-x {
+  width: 100%;
+  max-width: 80rem;
+  margin-inline: auto;
+  padding-inline: 1rem;
+}
+@media (min-width: 640px) {
+  .container-x {
+    padding-inline: 1.5rem;
+  }
+}
+}
+
+@keyframes slide-in {
+  from {
+    transform: translateX(100%);
+  }
+}
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+.animate-slide-in {
+  animation: slide-in 0.25s ease-out;
+}
+.animate-fade-in {
+  animation: fade-in 0.2s ease-out;
+}
+
+@keyframes marquee {
+  to {
+    transform: translateX(-50%);
+  }
+}
+.animate-marquee {
+  animation: marquee 40s linear infinite;
+}
+
+details > summary {
+  list-style: none;
+  cursor: pointer;
+}
+details > summary::-webkit-details-marker {
+  display: none;
+}
+details[open] .chev {
+  transform: rotate(45deg);
+}
