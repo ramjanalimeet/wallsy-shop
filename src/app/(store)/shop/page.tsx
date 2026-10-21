@@ -4,14 +4,14 @@ import { listProducts, type SortKey } from "@/lib/catalog";
 import { db } from "@/lib/db";
 import { getSettings } from "@/lib/settings";
 
-export const metadata = { title: "Shop all prints" };
+export const metadata = { title: "সব প্রিন্ট" };
 
 const sorts: [SortKey, string][] = [
-  ["featured", "Bestselling"],
-  ["newest", "Newest"],
-  ["rating", "Top rated"],
-  ["price-asc", "Price: low to high"],
-  ["price-desc", "Price: high to low"],
+  ["featured", "জনপ্রিয়"],
+  ["newest", "নতুন"],
+  ["rating", "সেরা রেটিং"],
+  ["price-asc", "দাম: কম থেকে বেশি"],
+  ["price-desc", "দাম: বেশি থেকে কম"],
 ];
 
 type Search = { category?: string; q?: string; sort?: string };
@@ -37,14 +37,14 @@ export default async function ShopPage({ searchParams }: { searchParams: Promise
   return (
     <div className="container-x py-12">
       <div className="mb-8">
-        <h1 className="font-serif text-5xl">{sp.q ? `Results for “${sp.q}”` : (active?.name ?? "All prints")}</h1>
-        <p className="mt-3 max-w-xl text-muted">{active?.description ?? "Museum-quality prints from independent artists. Free shipping over the threshold, 30-day returns."}</p>
+        <h1 className="font-serif text-5xl">{sp.q ? `“${sp.q}” এর ফলাফল` : (active?.name ?? "সব প্রিন্ট")}</h1>
+        <p className="mt-3 max-w-xl text-muted">{active?.description ?? "প্রিমিয়াম কোয়ালিটির ওয়াল আর্ট। সারা বাংলাদেশে ক্যাশ অন ডেলিভারি।"}</p>
       </div>
 
       <div className="sticky top-16 z-30 -mx-4 mb-8 flex flex-col gap-3 border-y border-line bg-paper/95 px-4 py-3 backdrop-blur sm:flex-row sm:items-center sm:justify-between">
         <div className="flex gap-2 overflow-x-auto pb-1 sm:pb-0">
           <Link href={href({ category: undefined })} className={`shrink-0 rounded-full border px-4 py-1.5 text-sm font-medium ${!active ? "border-ink bg-ink text-white" : "border-line bg-white hover:border-ink"}`}>
-            All
+            সব
           </Link>
           {categories.map((c) => (
             <Link
@@ -57,8 +57,8 @@ export default async function ShopPage({ searchParams }: { searchParams: Promise
           ))}
         </div>
         <div className="flex shrink-0 items-center gap-2 text-sm">
-          <span className="text-muted">{products.length} prints ·</span>
-          <span className="text-muted">Sort:</span>
+          <span className="text-muted">{products.length}টি প্রিন্ট ·</span>
+          <span className="text-muted">সাজান:</span>
           <div className="flex gap-1 overflow-x-auto">
             {sorts.map(([k, label]) => (
               <Link key={k} href={href({ sort: k === "featured" ? undefined : k })} className={`shrink-0 rounded-md px-2 py-1 ${sort === k ? "bg-sand font-semibold" : "hover:bg-sand"}`}>
@@ -71,10 +71,10 @@ export default async function ShopPage({ searchParams }: { searchParams: Promise
 
       {products.length === 0 ? (
         <div className="rounded-2xl bg-sand p-16 text-center">
-          <p className="font-serif text-2xl">Nothing found</p>
-          <p className="mt-2 text-muted">Try another search or browse all prints.</p>
+          <p className="font-serif text-2xl">কিছু পাওয়া যায়নি</p>
+          <p className="mt-2 text-muted">অন্য কিছু লিখে খুঁজুন অথবা সব প্রিন্ট দেখুন।</p>
           <Link href="/shop" className="btn btn-primary mt-6">
-            View all prints
+            সব প্রিন্ট দেখুন
           </Link>
         </div>
       ) : (

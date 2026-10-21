@@ -10,7 +10,7 @@ export default async function OrdersPage({ searchParams }: { searchParams: Promi
   const { status = "all", q } = await searchParams;
   const where = {
     ...(status !== "all" ? { status } : {}),
-    ...(q ? { OR: [{ name: { contains: q, mode: "insensitive" as const } }, { email: { contains: q, mode: "insensitive" as const } }, ...(Number(q) ? [{ number: Number(q) }] : [])] } : {}),
+    ...(q ? { OR: [{ name: { contains: q, mode: "insensitive" as const } }, { phone: { contains: q } }, { email: { contains: q, mode: "insensitive" as const } }, ...(Number(q) ? [{ number: Number(q) }] : [])] } : {}),
   };
   const [settings, orders, counts] = await Promise.all([
     getSettings(),
@@ -34,7 +34,7 @@ export default async function OrdersPage({ searchParams }: { searchParams: Promi
         ))}
         <form className="ml-auto">
           {status !== "all" && <input type="hidden" name="status" value={status} />}
-          <input name="q" defaultValue={q} placeholder="Search name, email, #" className="input py-1.5" />
+          <input name="q" defaultValue={q} placeholder="Search name, phone, #" className="input py-1.5" />
         </form>
       </div>
       {orders.length === 0 ? (
@@ -64,7 +64,7 @@ export default async function OrdersPage({ searchParams }: { searchParams: Promi
                   <td className="p-3">
                     <Link href={`/admin/orders/${o.id}`}>
                       <span className="block">{o.name}</span>
-                      <span className="text-xs text-muted">{o.email}</span>
+                      <span className="text-xs text-muted">{o.phone || o.email}</span>
                     </Link>
                   </td>
                   <td className="p-3 text-muted">{o._count.items}</td>

@@ -23,9 +23,9 @@ export function QuickAdd({ product }: { product: CatalogProduct }) {
         })
       }
       className="absolute right-3 top-3 translate-y-1 rounded-full bg-white px-3.5 py-2 text-xs font-semibold shadow-md transition hover:bg-ink hover:text-white md:opacity-0 md:group-hover:translate-y-0 md:group-hover:opacity-100"
-      aria-label={`Quick add ${product.title} to cart`}
+      aria-label={`${product.title} কার্টে যোগ করুন`}
     >
-      + Quick add
+      + কার্টে নিন
     </button>
   );
 }

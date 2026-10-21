@@ -7,12 +7,13 @@ import { money, percentOff } from "@/lib/format";
 import { FireIcon, MinusIcon, PlusIcon, Stars } from "../icons";
 import { useCart } from "./CartProvider";
 import { FreeShippingBar } from "./FreeShippingBar";
+import { WhatsAppOrderButton } from "./WhatsApp";
 
 const frames = [
-  { name: "", label: "No frame", swatch: "bg-white border-dashed", cls: "framed-none" },
-  { name: "Black", label: "Black", swatch: "bg-[#1f1d1a]", cls: "" },
-  { name: "White", label: "White", swatch: "bg-[#f4f1ec]", cls: "framed-white" },
-  { name: "Oak", label: "Oak", swatch: "bg-[#b98a5a]", cls: "framed-oak" },
+  { name: "", label: "ফ্রেম ছাড়া", swatch: "bg-white border-dashed", cls: "framed-none" },
+  { name: "Black", label: "কালো", swatch: "bg-[#1f1d1a]", cls: "" },
+  { name: "White", label: "সাদা", swatch: "bg-[#f4f1ec]", cls: "framed-white" },
+  { name: "Oak", label: "ওক কাঠ", swatch: "bg-[#b98a5a]", cls: "framed-oak" },
 ];
 
 export function ProductPurchase({ product, delivery, children }: { product: CatalogProduct; delivery: string; children: React.ReactNode }) {
@@ -33,6 +34,7 @@ export function ProductPurchase({ product, delivery, children }: { product: Cata
   const off = percentOff(unitPrice, compareAt);
   const soldOut = product.stock <= 0;
   const frameCls = frames.find((f) => f.name === frame)?.cls ?? "";
+  const frameLabel = frames.find((f) => f.name === frame)?.label ?? frame;
 
   useEffect(() => {
     const el = buttonRef.current;
@@ -80,11 +82,11 @@ export function ProductPurchase({ product, delivery, children }: { product: Cata
       <div>
         {product.category && <p className="text-sm font-semibold uppercase tracking-wider text-accent">{product.category.name}</p>}
         <h1 className="mt-2 font-serif text-4xl leading-tight sm:text-5xl">{product.title}</h1>
-        <p className="mt-1 text-muted">by {product.artist}</p>
+        <p className="mt-1 text-muted">আর্টিস্ট: {product.artist}</p>
         {product.reviewCount > 0 && (
           <a href="#reviews" className="mt-3 inline-flex items-center gap-2 text-sm">
             <Stars rating={product.rating} /> <span className="font-semibold">{product.rating.toFixed(1)}</span>
-            <span className="text-muted underline-offset-2 hover:underline">({product.reviewCount} reviews)</span>
+            <span className="text-muted underline-offset-2 hover:underline">({product.reviewCount}টি রিভিউ)</span>
           </a>
         )}
 
@@ -93,14 +95,14 @@ export function ProductPurchase({ product, delivery, children }: { product: Cata
           {off > 0 && compareAt && (
             <>
               <span className="text-lg text-muted line-through">{money(compareAt, config.currency)}</span>
-              <span className="rounded-full bg-accent/10 px-2.5 py-1 text-sm font-semibold text-accent">Save {off}%</span>
+              <span className="rounded-full bg-accent/10 px-2.5 py-1 text-sm font-semibold text-accent">{off}% ছাড়</span>
             </>
           )}
         </div>
 
         {product.variants.length > 0 && (
           <fieldset className="mt-8">
-            <legend className="mb-3 text-sm font-semibold">Size</legend>
+            <legend className="mb-3 text-sm font-semibold">সাইজ</legend>
             <div className="grid grid-cols-3 gap-2">
               {product.variants.map((v) => (
                 <button
@@ -118,7 +120,7 @@ export function ProductPurchase({ product, delivery, children }: { product: Cata
 
         <fieldset className="mt-6">
           <legend className="mb-3 text-sm font-semibold">
-            Frame <span className="font-normal text-muted">· {frame ? `${frame} (+${money(config.framePrice, config.currency)})` : "Print only"}</span>
+            ফ্রেম <span className="font-normal text-muted">· {frame ? `${frameLabel} (+${money(config.framePrice, config.currency)})` : "শুধু প্রিন্ট"}</span>
           </legend>
           <div className="flex flex-wrap gap-2">
             {frames.map((f) => (
@@ -131,27 +133,27 @@ export function ProductPurchase({ product, delivery, children }: { product: Cata
               </button>
             ))}
           </div>
-          {frame && <p className="mt-2 text-sm text-sage">✓ Arrives assembled & ready to hang</p>}
+          {frame && <p className="mt-2 text-sm text-sage">✓ ফ্রেমসহ রেডি টু হ্যাং অবস্থায় পৌঁছাবে</p>}
         </fieldset>
 
         {!soldOut && product.stock <= 10 && (
           <p className="mt-6 flex items-center gap-2 text-sm font-medium text-accent-dark">
-            <FireIcon className="h-4 w-4" /> Selling fast — only {product.stock} left in stock
+            <FireIcon className="h-4 w-4" /> দ্রুত বিক্রি হচ্ছে — মাত্র {product.stock}টি স্টকে আছে
           </p>
         )}
 
         <div ref={buttonRef} className="mt-6 flex gap-3">
           <div className="flex items-center rounded-full border border-line bg-white">
-            <button className="p-3" onClick={() => setQty((q) => Math.max(1, q - 1))} aria-label="Decrease quantity">
+            <button className="p-3" onClick={() => setQty((q) => Math.max(1, q - 1))} aria-label="পরিমাণ কমান">
               <MinusIcon className="h-4 w-4" />
             </button>
             <span className="w-6 text-center">{qty}</span>
-            <button className="p-3" onClick={() => setQty((q) => Math.min(Math.max(1, product.stock), q + 1))} aria-label="Increase quantity">
+            <button className="p-3" onClick={() => setQty((q) => Math.min(Math.max(1, product.stock), q + 1))} aria-label="পরিমাণ বাড়ান">
               <PlusIcon className="h-4 w-4" />
             </button>
           </div>
           <button disabled={soldOut} onClick={() => addToCart()} className="btn btn-primary flex-1">
-            {soldOut ? "Sold out" : `Add to cart · ${money(unitPrice * qty, config.currency)}`}
+            {soldOut ? "স্টক শেষ" : `কার্টে যোগ করুন · ${money(unitPrice * qty, config.currency)}`}
           </button>
         </div>
         {!soldOut && (
@@ -162,8 +164,15 @@ export function ProductPurchase({ product, delivery, children }: { product: Cata
             }}
             className="btn btn-accent mt-3 w-full"
           >
-            Buy it now
+            এখনই কিনুন
           </button>
+        )}
+        {!soldOut && (
+          <WhatsAppOrderButton
+            className="mt-3 w-full"
+            items={[{ title: product.title, variantName: variant?.name ?? "Standard", frame, quantity: qty, unitPrice }]}
+            path={`/product/${product.slug}`}
+          />
         )}
 
         <div className="mt-5">
@@ -172,16 +181,16 @@ export function ProductPurchase({ product, delivery, children }: { product: Cata
 
         <ul className="mt-5 grid grid-cols-2 gap-3 text-sm">
           <li className="rounded-xl border border-line bg-white p-3">
-            🚚 <strong>Get it {delivery}</strong>
+            🚚 <strong>{delivery}</strong>
           </li>
           <li className="rounded-xl border border-line bg-white p-3">
-            ↩️ <strong>30-day</strong> happy returns
+            ↩️ <strong>৭ দিনের</strong> সহজ রিটার্ন
           </li>
           <li className="rounded-xl border border-line bg-white p-3">
-            💵 <strong>Cash on delivery</strong>
+            💵 <strong>ক্যাশ অন ডেলিভারি</strong>
           </li>
           <li className="rounded-xl border border-line bg-white p-3">
-            🖼️ <strong>Archival</strong> 100+ yr inks
+            🖼️ <strong>প্রিমিয়াম</strong> আর্ট পেপার
           </li>
         </ul>
 
@@ -195,11 +204,11 @@ export function ProductPurchase({ product, delivery, children }: { product: Cata
             <div className="min-w-0 flex-1">
               <p className="truncate font-medium">{product.title}</p>
               <p className="text-sm text-muted">
-                {variant?.name} · {frame || "Unframed"}
+                {variant?.name} · {frame ? frameLabel : "ফ্রেম ছাড়া"}
               </p>
             </div>
             <button onClick={() => addToCart()} className="btn btn-accent shrink-0 px-5 py-3">
-              Add · {money(unitPrice * qty, config.currency)}
+              কার্টে নিন · {money(unitPrice * qty, config.currency)}
             </button>
           </div>
         </div>

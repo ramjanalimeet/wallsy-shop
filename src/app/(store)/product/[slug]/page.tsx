@@ -17,15 +17,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return { title: product.title, description: product.description.slice(0, 160), openGraph: { images: product.images.slice(0, 1) } };
 }
 
-function addBusinessDays(from: Date, days: number) {
-  const d = new Date(from);
-  while (days > 0) {
-    d.setDate(d.getDate() + 1);
-    if (d.getDay() !== 0 && d.getDay() !== 6) days--;
-  }
-  return d;
-}
-
 export default async function ProductPage({ params }: Props) {
   const { slug } = await params;
   const product = await getProduct(slug);
@@ -37,15 +28,13 @@ export default async function ProductPage({ params }: Props) {
     listProducts({ category: product.category?.slug, where: { id: { not: product.id } }, take: 4 }),
   ]);
 
-  const fmt = (d: Date) => d.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
-  const now = new Date();
-  const delivery = `${fmt(addBusinessDays(now, 3))} – ${fmt(addBusinessDays(now, 6))}`;
+  const delivery = "ঢাকায় ১–২ দিন, ঢাকার বাইরে ৩–৫ দিনে ডেলিভারি";
 
   const details = [
-    ["Description", product.description],
-    ["Print & paper", "250gsm archival matte fine-art paper · Museum-grade pigment inks · Printed with a 3 mm white border so it fits standard frames and mats."],
-    ["Shipping", `Made to order in 1–2 business days. Free shipping on orders over ${money(settings.freeShippingThreshold, settings.currency)}, otherwise ${money(settings.shippingFee, settings.currency)}. Unframed prints ship rolled in a crush-proof tube.`],
-    ["Returns", "Not in love? Return it within 30 days for a full refund. Damaged in transit? Send us a photo and we'll reprint it free."],
+    ["বিবরণ", product.description],
+    ["প্রিন্ট ও পেপার", "২৫০ জিএসএম প্রিমিয়াম ম্যাট আর্ট পেপার · দীর্ঘস্থায়ী পিগমেন্ট কালি · স্ট্যান্ডার্ড ফ্রেমে মাপমতো বসে।"],
+    ["ডেলিভারি", `ঢাকার ভিতরে ডেলিভারি চার্জ ${money(settings.shippingFee, settings.currency)}, ঢাকার বাইরে ${money(settings.shippingFeeOutside, settings.currency)}। ${money(settings.freeShippingThreshold, settings.currency)} বা তার বেশি অর্ডারে ডেলিভারি ফ্রি। সারা বাংলাদেশে ক্যাশ অন ডেলিভারি।`],
+    ["রিটার্ন", "পণ্য হাতে পাওয়ার ৭ দিনের মধ্যে রিটার্ন করা যাবে। ডেলিভারিতে ভাঙা বা ক্ষতিগ্রস্ত হলে ছবি পাঠান, আমরা বিনামূল্যে নতুন পাঠাব।"],
   ];
 
   const jsonLd = {
@@ -55,7 +44,7 @@ export default async function ProductPage({ params }: Props) {
     image: product.images,
     description: product.description,
     brand: settings.storeName,
-    offers: { "@type": "Offer", price: (product.price / 100).toFixed(2), availability: product.stock > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock" },
+    offers: { "@type": "Offer", price: (product.price / 100).toFixed(2), priceCurrency: "BDT", availability: product.stock > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock" },
     ...(product.reviewCount ? { aggregateRating: { "@type": "AggregateRating", ratingValue: product.rating.toFixed(1), reviewCount: product.reviewCount } } : {}),
   };
 
@@ -79,17 +68,17 @@ export default async function ProductPage({ params }: Props) {
       <section id="reviews" className="mt-24 scroll-mt-24">
         <div className="mb-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
           <div>
-            <h2 className="font-serif text-4xl">Customer reviews</h2>
+            <h2 className="font-serif text-4xl">ক্রেতাদের রিভিউ</h2>
             {product.reviewCount > 0 && (
               <p className="mt-2 flex items-center gap-2 text-muted">
-                <Stars rating={product.rating} /> {product.rating.toFixed(1)} out of 5 · {product.reviewCount} reviews
+                <Stars rating={product.rating} /> {product.rating.toFixed(1)}/5 · {product.reviewCount}টি রিভিউ
               </p>
             )}
           </div>
           <ReviewForm productId={product.id} />
         </div>
         {reviews.length === 0 ? (
-          <p className="text-muted">No reviews yet — be the first to share yours.</p>
+          <p className="text-muted">এখনো কোনো রিভিউ নেই — প্রথম রিভিউটি আপনিই দিন।</p>
         ) : (
           <div className="grid gap-4 md:grid-cols-2">
             {reviews.map((r) => (
@@ -108,7 +97,7 @@ export default async function ProductPage({ params }: Props) {
 
       {related.length > 0 && (
         <section className="mt-24">
-          <h2 className="mb-8 font-serif text-4xl">You may also like</h2>
+          <h2 className="mb-8 font-serif text-4xl">আরও দেখুন</h2>
           <div className="grid grid-cols-2 gap-x-4 gap-y-10 lg:grid-cols-4">
             {related.map((p) => (
               <ProductCard key={p.id} product={p} currency={settings.currency} />

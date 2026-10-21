@@ -46,16 +46,19 @@ export default async function SettingsPage() {
           </Field>
         </Card>
 
-        <Card className="grid gap-4 sm:grid-cols-4">
-          <p className="font-semibold sm:col-span-4">Pricing & shipping</p>
+        <Card className="grid gap-4 sm:grid-cols-5">
+          <p className="font-semibold sm:col-span-5">Pricing & delivery</p>
           <Field label="Currency symbol">
             <input name="currency" defaultValue={s.currency} className="input" />
           </Field>
-          <Field label="Free shipping over">
+          <Field label="Free delivery over">
             <input name="freeShippingThreshold" inputMode="decimal" defaultValue={decimal(s.freeShippingThreshold)} className="input" />
           </Field>
-          <Field label="Standard shipping fee">
+          <Field label="Delivery: inside Dhaka">
             <input name="shippingFee" inputMode="decimal" defaultValue={decimal(s.shippingFee)} className="input" />
+          </Field>
+          <Field label="Delivery: outside Dhaka">
+            <input name="shippingFeeOutside" inputMode="decimal" defaultValue={decimal(s.shippingFeeOutside)} className="input" />
           </Field>
           <Field label="Frame add-on price">
             <input name="framePrice" inputMode="decimal" defaultValue={decimal(s.framePrice)} className="input" />
@@ -80,8 +83,11 @@ export default async function SettingsPage() {
           <Field label="Email">
             <input name="contactEmail" type="email" defaultValue={s.contactEmail} className="input" />
           </Field>
-          <Field label="Phone">
+          <Field label="Phone (shown in footer)">
             <input name="contactPhone" defaultValue={s.contactPhone} className="input" />
+          </Field>
+          <Field label="WhatsApp number for orders" hint="Any format, e.g. 01839295114. Leave blank to hide the WhatsApp buttons." className="sm:col-span-2">
+            <input name="whatsappNumber" defaultValue={s.whatsappNumber ? `+${s.whatsappNumber}` : ""} className="input" />
           </Field>
           <Field label="Instagram URL">
             <input name="instagram" defaultValue={s.instagram} className="input" />

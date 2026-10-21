@@ -19,6 +19,8 @@ export type StoreConfig = {
   currency: string;
   freeShippingThreshold: number;
   shippingFee: number;
+  shippingFeeOutside: number;
+  whatsappNumber: string;
   framePrice: number;
 };
 

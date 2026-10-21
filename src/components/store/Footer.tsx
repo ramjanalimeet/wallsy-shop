@@ -18,11 +18,11 @@ export function Footer({ settings, categories }: { settings: Settings; categorie
           </div>
         </div>
         <div>
-          <p className="mb-4 text-sm font-semibold uppercase tracking-wider text-white/50">Shop</p>
+          <p className="mb-4 text-sm font-semibold uppercase tracking-wider text-white/50">শপ</p>
           <ul className="space-y-2 text-white/80">
             <li>
               <Link href="/shop" className="hover:text-white">
-                All prints
+                সব প্রিন্ট
               </Link>
             </li>
             {categories.map((c) => (
@@ -35,16 +35,16 @@ export function Footer({ settings, categories }: { settings: Settings; categorie
           </ul>
         </div>
         <div>
-          <p className="mb-4 text-sm font-semibold uppercase tracking-wider text-white/50">Help</p>
+          <p className="mb-4 text-sm font-semibold uppercase tracking-wider text-white/50">সাহায্য</p>
           <ul className="space-y-2 text-white/80">
             <li>
               <Link href="/#faq" className="hover:text-white">
-                FAQ
+                সাধারণ জিজ্ঞাসা
               </Link>
             </li>
             <li>
               <Link href="/#faq" className="hover:text-white">
-                Shipping & returns
+                ডেলিভারি ও রিটার্ন
               </Link>
             </li>
             <li>
@@ -52,11 +52,24 @@ export function Footer({ settings, categories }: { settings: Settings; categorie
                 {settings.contactEmail}
               </a>
             </li>
-            {settings.contactPhone && <li>{settings.contactPhone}</li>}
+            {settings.contactPhone && (
+              <li>
+                <a href={`tel:${settings.contactPhone.replace(/[^+\d]/g, "")}`} className="hover:text-white">
+                  📞 {settings.contactPhone}
+                </a>
+              </li>
+            )}
+            {settings.whatsappNumber && (
+              <li>
+                <a href={`https://wa.me/${settings.whatsappNumber}`} target="_blank" rel="noopener noreferrer" className="hover:text-white">
+                  💬 WhatsApp
+                </a>
+              </li>
+            )}
           </ul>
         </div>
         <div>
-          <p className="mb-4 text-sm font-semibold uppercase tracking-wider text-white/50">Follow</p>
+          <p className="mb-4 text-sm font-semibold uppercase tracking-wider text-white/50">ফলো করুন</p>
           <ul className="space-y-2 text-white/80">
             {settings.instagram && (
               <li>
@@ -72,16 +85,16 @@ export function Footer({ settings, categories }: { settings: Settings; categorie
                 </a>
               </li>
             )}
-            <li className="text-white/60">Tag us #MyWallsy</li>
+            <li className="text-white/60">#MyWallsy দিয়ে ট্যাগ করুন</li>
           </ul>
         </div>
       </div>
       <div className="border-t border-white/10">
         <div className="container-x flex flex-col justify-between gap-2 py-6 text-sm text-white/50 sm:flex-row">
           <p>
-            © {new Date().getFullYear()} {settings.storeName}. All rights reserved.
+            © {new Date().getFullYear()} {settings.storeName}। সর্বস্বত্ব সংরক্ষিত।
           </p>
-          <p>Secure checkout · Cash on delivery · 30-day returns</p>
+          <p>ক্যাশ অন ডেলিভারি · সারা বাংলাদেশে ডেলিভারি · ৭ দিনের রিটার্ন</p>
         </div>
       </div>
     </footer>

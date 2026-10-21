@@ -101,12 +101,19 @@ export default async function OrderDetail({ params }: { params: Promise<{ id: st
           <Card className="text-sm">
             <p className="mb-2 font-semibold">Customer</p>
             <p>{order.name}</p>
-            <a href={`mailto:${order.email}`} className="block text-accent hover:underline">
-              {order.email}
-            </a>
             {order.phone && (
-              <a href={`tel:${order.phone}`} className="block text-accent hover:underline">
-                {order.phone}
+              <>
+                <a href={`tel:${order.phone}`} className="block text-accent hover:underline">
+                  📞 {order.phone}
+                </a>
+                <a href={`https://wa.me/88${order.phone}`} target="_blank" rel="noopener noreferrer" className="block text-accent hover:underline">
+                  💬 WhatsApp the customer
+                </a>
+              </>
+            )}
+            {order.email && (
+              <a href={`mailto:${order.email}`} className="block text-accent hover:underline">
+                {order.email}
               </a>
             )}
           </Card>
@@ -114,10 +121,8 @@ export default async function OrderDetail({ params }: { params: Promise<{ id: st
             <p className="mb-2 font-semibold">Ship to</p>
             <p>{order.name}</p>
             <p>{order.address}</p>
-            <p>
-              {order.city} {order.zip}
-            </p>
-            <p>{order.country}</p>
+            <p>{order.city}</p>
+            <p className="mt-2 font-medium">{order.deliveryArea === "outside" ? "Outside Dhaka" : "Inside Dhaka"}</p>
           </Card>
           {order.note && (
             <Card className="text-sm">

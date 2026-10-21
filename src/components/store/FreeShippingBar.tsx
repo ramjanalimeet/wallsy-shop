@@ -16,11 +16,11 @@ export function FreeShippingBar({ extra = 0 }: { extra?: number }) {
         <TruckIcon className="h-4 w-4 shrink-0" />
         {remaining > 0 ? (
           <span>
-            You&apos;re <strong>{money(remaining, config.currency)}</strong> away from <strong>free shipping</strong>
+            আর মাত্র <strong>{money(remaining, config.currency)}</strong> অর্ডার করলেই <strong>ফ্রি ডেলিভারি</strong>
           </span>
         ) : (
           <span>
-            <strong>Nice!</strong> Your order ships free.
+            <strong>অভিনন্দন!</strong> আপনার অর্ডারে ডেলিভারি ফ্রি।
           </span>
         )}
       </p>

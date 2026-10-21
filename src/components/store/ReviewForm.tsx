@@ -8,11 +8,11 @@ export function ReviewForm({ productId }: { productId: string }) {
   const [rating, setRating] = useState(5);
   const [open, setOpen] = useState(false);
 
-  if (state?.ok) return <p className="rounded-xl bg-sand p-4">Thanks! Your review will appear once it&apos;s approved.</p>;
+  if (state?.ok) return <p className="rounded-xl bg-sand p-4">ধন্যবাদ! অনুমোদনের পর আপনার রিভিউ দেখা যাবে।</p>;
   if (!open)
     return (
       <button onClick={() => setOpen(true)} className="btn btn-ghost">
-        Write a review
+        রিভিউ লিখুন
       </button>
     );
 
@@ -27,11 +27,11 @@ export function ReviewForm({ productId }: { productId: string }) {
           </button>
         ))}
       </div>
-      <input name="name" required placeholder="Your name" className="input" />
-      <textarea name="body" required minLength={10} rows={4} placeholder="What did you love about it?" className="input" />
+      <input name="name" required placeholder="আপনার নাম" className="input" />
+      <textarea name="body" required minLength={10} rows={4} placeholder="প্রোডাক্টটি কেমন লেগেছে?" className="input" />
       {state?.error && <p className="text-sm text-red-600">{state.error}</p>}
       <button disabled={pending} className="btn btn-primary">
-        {pending ? "Sending…" : "Submit review"}
+        {pending ? "পাঠানো হচ্ছে…" : "রিভিউ দিন"}
       </button>
     </form>
   );

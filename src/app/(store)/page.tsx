@@ -1,18 +1,20 @@
 import Link from "next/link";
 import { ArrowIcon, LeafIcon, ReturnIcon, ShieldIcon, Stars, TruckIcon } from "@/components/icons";
 import { NewsletterForm } from "@/components/store/NewsletterForm";
+import { WhatsAppIcon } from "@/components/store/WhatsApp";
 import { ProductCard } from "@/components/store/ProductCard";
 import { listProducts } from "@/lib/catalog";
 import { db } from "@/lib/db";
 import { money } from "@/lib/format";
 import { getSettings } from "@/lib/settings";
+import { whatsappLink } from "@/lib/whatsapp";
 
 const faqs = [
-  ["How long does delivery take?", "Prints are made to order within 1–2 business days. Most orders arrive within 3–5 business days after dispatch, and you'll get tracking by email."],
-  ["What paper and inks do you use?", "250gsm archival matte fine-art paper and museum-grade pigment inks, rated to last over 100 years without fading."],
-  ["Do frames come with glass?", "Every frame is solid wood with shatter-proof acrylic glazing, a white mat and hanging hardware — ready to hang straight out of the box."],
-  ["Can I return my order?", "Yes. If you don't love it, return it within 30 days for a full refund. Damaged in transit? We'll reprint it free."],
-  ["Which payment methods do you accept?", "Cash on delivery is available on every order. Pay the courier when your art arrives."],
+  ["ডেলিভারি পেতে কতদিন লাগে?", "ঢাকার ভিতরে সাধারণত ১–২ দিন এবং ঢাকার বাইরে ৩–৫ দিনের মধ্যে ডেলিভারি দেওয়া হয়। অর্ডারের পর আমরা ফোনে কনফার্ম করি।"],
+  ["কীভাবে অর্ডার করব?", "পছন্দের প্রিন্টটি কার্টে যোগ করে চেকআউট করুন, অথবা সরাসরি “WhatsApp-এ অর্ডার করুন” বাটনে ক্লিক করে আমাদের মেসেজ পাঠান।"],
+  ["পেমেন্ট কীভাবে করব?", "সারা বাংলাদেশে ক্যাশ অন ডেলিভারি। পণ্য হাতে পেয়ে ডেলিভারি ম্যানকে টাকা পরিশোধ করুন।"],
+  ["ফ্রেমের সাথে কি গ্লাস থাকে?", "প্রতিটি ফ্রেম কাঠের তৈরি, সাথে থাকে না-ভাঙা অ্যাক্রিলিক গ্লাস, সাদা ম্যাট ও দেয়ালে ঝোলানোর হুক। বক্স খুলেই দেয়ালে লাগাতে পারবেন।"],
+  ["পণ্য ফেরত দেওয়া যাবে?", "হ্যাঁ। পণ্য হাতে পাওয়ার ৭ দিনের মধ্যে রিটার্ন করতে পারবেন। ডেলিভারিতে ভাঙা বা ক্ষতিগ্রস্ত হলে আমরা বিনামূল্যে নতুন পাঠাব।"],
 ];
 
 export default async function HomePage() {
@@ -42,15 +44,22 @@ export default async function HomePage() {
               <Link href="/shop" className="btn btn-accent px-8">
                 {settings.heroCta} <ArrowIcon className="h-4 w-4" />
               </Link>
-              <Link href="#categories" className="btn btn-ghost">
-                Shop by style
-              </Link>
+              {settings.whatsappNumber && (
+                <a
+                  href={whatsappLink(settings.whatsappNumber, "আসসালামু আলাইকুম, আমি ওয়াল আর্ট অর্ডার করতে চাই।")}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn bg-[#25D366] text-white hover:bg-[#1ebe5b]"
+                >
+                  <WhatsAppIcon /> WhatsApp-এ অর্ডার
+                </a>
+              )}
             </div>
             {ratingAgg._count > 0 && (
               <div className="mt-8 flex items-center gap-3 text-sm">
                 <Stars rating={avg} />
                 <span>
-                  <strong>{avg.toFixed(1)}/5</strong> from {ratingAgg._count} reviews
+                  <strong>{avg.toFixed(1)}/5</strong> · {ratingAgg._count}টি রিভিউ
                 </span>
               </div>
             )}
@@ -60,7 +69,7 @@ export default async function HomePage() {
             <div className="relative aspect-[5/4] rounded-[2rem] bg-gradient-to-b from-[#e9dfd0] to-[#dccdb8] p-6 sm:p-10">
               <div className="absolute left-[8%] top-[10%] w-[44%] rotate-[-1deg]">
                 <div className="framed">
-                  <img src={settings.heroImage} alt="Featured print" className="aspect-[3/4] w-full object-cover" />
+                  <img src={settings.heroImage} alt="ফিচারড প্রিন্ট" className="aspect-[3/4] w-full object-cover" />
                 </div>
               </div>
               {gallery[0] && (
@@ -82,8 +91,8 @@ export default async function HomePage() {
             <div className="absolute -bottom-5 left-6 flex items-center gap-3 rounded-2xl bg-white px-4 py-3 shadow-xl">
               <TruckIcon className="h-6 w-6 text-sage" />
               <div className="text-sm">
-                <p className="font-semibold">Free shipping</p>
-                <p className="text-muted">on orders over {money(settings.freeShippingThreshold, settings.currency)}</p>
+                <p className="font-semibold">ফ্রি ডেলিভারি</p>
+                <p className="text-muted">{money(settings.freeShippingThreshold, settings.currency)}+ অর্ডারে</p>
               </div>
             </div>
           </div>
@@ -94,10 +103,10 @@ export default async function HomePage() {
       <section className="border-y border-line bg-white">
         <div className="container-x grid grid-cols-2 gap-6 py-6 text-sm lg:grid-cols-4">
           {[
-            [TruckIcon, "Free shipping", `On orders over ${money(settings.freeShippingThreshold, settings.currency)}`],
-            [ReturnIcon, "30-day returns", "Love it or your money back"],
-            [LeafIcon, "Archival quality", "Pigment inks that last 100+ years"],
-            [ShieldIcon, "Pay on delivery", "Cash on delivery, no card needed"],
+            [TruckIcon, "সারা দেশে ডেলিভারি", `${money(settings.freeShippingThreshold, settings.currency)}+ অর্ডারে ফ্রি`],
+            [ShieldIcon, "ক্যাশ অন ডেলিভারি", "পণ্য হাতে পেয়ে টাকা দিন"],
+            [ReturnIcon, "৭ দিনের রিটার্ন", "পছন্দ না হলে সহজে ফেরত"],
+            [LeafIcon, "প্রিমিয়াম কোয়ালিটি", "দীর্ঘস্থায়ী রং ও মোটা আর্ট পেপার"],
           ].map(([Icon, title, text]) => {
             const I = Icon as typeof TruckIcon;
             return (
@@ -117,11 +126,11 @@ export default async function HomePage() {
       <section id="categories" className="container-x scroll-mt-20 py-20">
         <div className="mb-10 flex items-end justify-between gap-4">
           <div>
-            <p className="text-sm font-semibold uppercase tracking-wider text-accent">Find your style</p>
-            <h2 className="mt-2 font-serif text-4xl">Shop by collection</h2>
+            <p className="text-sm font-semibold uppercase tracking-wider text-accent">আপনার স্টাইল খুঁজুন</p>
+            <h2 className="mt-2 font-serif text-4xl">কালেকশন</h2>
           </div>
           <Link href="/shop" className="hidden items-center gap-2 font-semibold hover:text-accent sm:flex">
-            View all <ArrowIcon className="h-4 w-4" />
+            সব দেখুন <ArrowIcon className="h-4 w-4" />
           </Link>
         </div>
         <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
@@ -146,11 +155,11 @@ export default async function HomePage() {
         <section className="container-x py-4">
           <div className="mb-10 flex items-end justify-between gap-4">
             <div>
-              <p className="text-sm font-semibold uppercase tracking-wider text-accent">Customer favourites</p>
-              <h2 className="mt-2 font-serif text-4xl">Bestsellers</h2>
+              <p className="text-sm font-semibold uppercase tracking-wider text-accent">সবচেয়ে জনপ্রিয়</p>
+              <h2 className="mt-2 font-serif text-4xl">বেস্টসেলার</h2>
             </div>
             <Link href="/shop" className="flex items-center gap-2 font-semibold hover:text-accent">
-              Shop all <ArrowIcon className="h-4 w-4" />
+              সব দেখুন <ArrowIcon className="h-4 w-4" />
             </Link>
           </div>
           <div className="grid grid-cols-2 gap-x-4 gap-y-10 md:grid-cols-3 lg:grid-cols-4">
@@ -177,18 +186,18 @@ export default async function HomePage() {
             })}
           </div>
           <div className="p-10 pt-0 lg:pl-0 lg:pt-10">
-            <p className="text-sm font-semibold uppercase tracking-wider text-accent">Framed by hand</p>
-            <h2 className="mt-2 font-serif text-4xl">Unbox it. Hang it. Done.</h2>
-            <p className="mt-4 text-muted">Add a solid wood frame to any print for {money(settings.framePrice, settings.currency)}. Every frame comes assembled with a mat, shatter-proof glazing and wall hooks.</p>
+            <p className="text-sm font-semibold uppercase tracking-wider text-accent">ফ্রেমসহ রেডি</p>
+            <h2 className="mt-2 font-serif text-4xl">বক্স খুলুন, দেয়ালে লাগান।</h2>
+            <p className="mt-4 text-muted">যেকোনো প্রিন্টের সাথে মাত্র {money(settings.framePrice, settings.currency)} যোগ করে কাঠের ফ্রেম নিন। ম্যাট, গ্লাস আর হুকসহ পুরোপুরি তৈরি অবস্থায় পৌঁছাবে।</p>
             <ul className="mt-6 space-y-3">
-              {["Solid wood in black, white or natural oak", "Shatter-proof acrylic — safe for kids' rooms", "Hanging hardware included, no tools needed"].map((t) => (
+              {["কালো, সাদা অথবা ন্যাচারাল ওক কাঠের ফ্রেম", "না-ভাঙা অ্যাক্রিলিক গ্লাস — বাচ্চাদের রুমেও নিরাপদ", "ঝোলানোর হুক সাথেই থাকে, কোনো টুল লাগবে না"].map((t) => (
                 <li key={t} className="flex items-center gap-3">
                   <span className="flex h-6 w-6 items-center justify-center rounded-full bg-white text-sage">✓</span> {t}
                 </li>
               ))}
             </ul>
             <Link href="/shop" className="btn btn-primary mt-8">
-              Find your print
+              প্রিন্ট বেছে নিন
             </Link>
           </div>
         </div>
@@ -200,9 +209,9 @@ export default async function HomePage() {
           <div className="container-x">
             <div className="mb-10 text-center">
               <Stars rating={avg} className="h-6 w-6" />
-              <h2 className="mt-3 font-serif text-4xl">Loved on walls everywhere</h2>
+              <h2 className="mt-3 font-serif text-4xl">ক্রেতারা যা বলছেন</h2>
               <p className="mt-2 text-muted">
-                Rated {avg.toFixed(1)} out of 5 across {ratingAgg._count} reviews
+                {ratingAgg._count}টি রিভিউতে গড় রেটিং {avg.toFixed(1)}/5
               </p>
             </div>
             <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
@@ -230,11 +239,11 @@ export default async function HomePage() {
         <section className="container-x py-20">
           <div className="mb-10 flex items-end justify-between gap-4">
             <div>
-              <p className="text-sm font-semibold uppercase tracking-wider text-accent">Just dropped</p>
-              <h2 className="mt-2 font-serif text-4xl">New arrivals</h2>
+              <p className="text-sm font-semibold uppercase tracking-wider text-accent">এইমাত্র এসেছে</p>
+              <h2 className="mt-2 font-serif text-4xl">নতুন কালেকশন</h2>
             </div>
             <Link href="/shop?sort=newest" className="flex items-center gap-2 font-semibold hover:text-accent">
-              See what&apos;s new <ArrowIcon className="h-4 w-4" />
+              সব নতুন দেখুন <ArrowIcon className="h-4 w-4" />
             </Link>
           </div>
           <div className="grid grid-cols-2 gap-x-4 gap-y-10 lg:grid-cols-4">
@@ -258,7 +267,7 @@ export default async function HomePage() {
 
       {/* FAQ */}
       <section id="faq" className="container-x max-w-3xl scroll-mt-20 py-20">
-        <h2 className="mb-8 text-center font-serif text-4xl">Questions? Answered.</h2>
+        <h2 className="mb-8 text-center font-serif text-4xl">সাধারণ জিজ্ঞাসা</h2>
         <div className="divide-y divide-line border-y border-line">
           {faqs.map(([q, a]) => (
             <details key={q} className="group py-5">

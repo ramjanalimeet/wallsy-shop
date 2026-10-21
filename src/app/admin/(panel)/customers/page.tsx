@@ -9,7 +9,7 @@ export default async function CustomersPage() {
   const [settings, customers, subscribers] = await Promise.all([
     getSettings(),
     db.order.groupBy({
-      by: ["email"],
+      by: ["phone"],
       where: { status: { not: "cancelled" } },
       _sum: { total: true },
       _count: true,
@@ -36,11 +36,11 @@ export default async function CustomersPage() {
             </thead>
             <tbody className="divide-y divide-line">
               {customers.map((c) => (
-                <tr key={c.email}>
+                <tr key={c.phone}>
                   <td className="p-3">
                     <span className="block font-medium">{c._max.name}</span>
-                    <a href={`mailto:${c.email}`} className="text-xs text-muted hover:underline">
-                      {c.email}
+                    <a href={`tel:${c.phone}`} className="text-xs text-muted hover:underline">
+                      {c.phone || "—"}
                     </a>
                   </td>
                   <td className="p-3">{c._count}</td>

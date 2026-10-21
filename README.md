@@ -1,5 +1,7 @@
 # Wallsy: wall-art store and admin dashboard
 
+Built for shoppers in Bangladesh: prices in Taka (৳), key sections in Bangla, cash on delivery with inside/outside Dhaka delivery fees, and **Order on WhatsApp** buttons alongside the regular cart and checkout. The WhatsApp number, delivery fees, free-delivery amount and home page text are all editable in **Store settings**.
+
 A conversion-focused e-commerce store for art prints, with a built-in dashboard to run it. Built with Next.js, Tailwind CSS and Prisma.
 
 ## Deploy on Vercel

@@ -43,7 +43,7 @@ export function Header({ storeName, categories }: { storeName: string; categorie
         </Link>
         <nav className="ml-8 hidden items-center gap-6 text-sm font-medium lg:flex">
           <Link href="/shop" className="hover:text-accent">
-            Shop all
+            সব প্রিন্ট
           </Link>
           {categories.map((c) => (
             <Link key={c.slug} href={`/shop?category=${c.slug}`} className="hover:text-accent">
@@ -51,7 +51,7 @@ export function Header({ storeName, categories }: { storeName: string; categorie
             </Link>
           ))}
           <Link href="/shop?sort=newest" className="text-accent">
-            New in
+            নতুন
           </Link>
         </nav>
         <div className="ml-auto flex items-center gap-1">
@@ -71,7 +71,7 @@ export function Header({ storeName, categories }: { storeName: string; categorie
 
       {search && (
         <form onSubmit={submit} className="container-x animate-fade-in pb-4">
-          <input autoFocus value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search prints, artists, styles…" className="input" />
+          <input autoFocus value={q} onChange={(e) => setQ(e.target.value)} placeholder="প্রিন্ট, আর্টিস্ট বা স্টাইল খুঁজুন…" className="input" />
         </form>
       )}
 
@@ -83,7 +83,7 @@ export function Header({ storeName, categories }: { storeName: string; categorie
               <CloseIcon />
             </button>
             <Link href="/shop" className="py-2">
-              Shop all
+              সব প্রিন্ট
             </Link>
             {categories.map((c) => (
               <Link key={c.slug} href={`/shop?category=${c.slug}`} className="py-2">
@@ -91,7 +91,7 @@ export function Header({ storeName, categories }: { storeName: string; categorie
               </Link>
             ))}
             <Link href="/shop?sort=newest" className="py-2 text-accent">
-              New in
+              নতুন
             </Link>
           </nav>
         </div>

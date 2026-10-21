@@ -2,6 +2,7 @@ import { CartDrawer, type Upsell } from "@/components/store/CartDrawer";
 import { CartProvider } from "@/components/store/CartProvider";
 import { Footer } from "@/components/store/Footer";
 import { Header } from "@/components/store/Header";
+import { WhatsAppFloat } from "@/components/store/WhatsApp";
 import { listProducts } from "@/lib/catalog";
 import { db } from "@/lib/db";
 import { getSettings } from "@/lib/settings";
@@ -32,6 +33,8 @@ export default async function StoreLayout({ children }: { children: React.ReactN
         currency: settings.currency,
         freeShippingThreshold: settings.freeShippingThreshold,
         shippingFee: settings.shippingFee,
+        shippingFeeOutside: settings.shippingFeeOutside,
+        whatsappNumber: settings.whatsappNumber,
         framePrice: settings.framePrice,
       }}
     >
@@ -39,6 +42,7 @@ export default async function StoreLayout({ children }: { children: React.ReactN
         <div className="bg-ink px-4 py-2 text-center text-xs font-medium tracking-wide text-white sm:text-sm">{settings.announcement}</div>
       )}
       <Header storeName={settings.storeName} categories={categories} />
+      <WhatsAppFloat />
       <main>{children}</main>
       <Footer settings={settings} categories={categories} />
       <CartDrawer upsells={upsells} />

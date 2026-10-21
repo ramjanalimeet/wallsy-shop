@@ -17,6 +17,15 @@ const cents = (f: FormData, k: string) => {
 };
 const int = (f: FormData, k: string) => Math.max(0, parseInt(str(f, k), 10) || 0);
 
+/** "+880 1839-295114", "01839295114" or "+01839295114" → "8801839295114" for wa.me links. */
+function whatsappDigits(input: string) {
+  const digits = input.replace(/\D/g, "");
+  if (!digits) return "";
+  if (digits.startsWith("880")) return digits;
+  if (digits.startsWith("01")) return `88${digits}`;
+  return digits;
+}
+
 function refresh() {
   revalidatePath("/", "layout");
 }
@@ -240,6 +249,8 @@ export async function saveSettings(_: State, form: FormData): Promise<State> {
       currency: str(form, "currency", 5) || "$",
       freeShippingThreshold: cents(form, "freeShippingThreshold"),
       shippingFee: cents(form, "shippingFee"),
+      shippingFeeOutside: cents(form, "shippingFeeOutside"),
+      whatsappNumber: whatsappDigits(str(form, "whatsappNumber", 30)),
       framePrice: cents(form, "framePrice"),
       newsletterTitle: str(form, "newsletterTitle", 120),
       newsletterText: str(form, "newsletterText", 300),

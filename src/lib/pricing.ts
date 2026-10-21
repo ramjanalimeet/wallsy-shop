@@ -8,7 +8,13 @@ export type CartLine = { productId: string; variantId?: string | null; framed?: 
 export const FRAMES = ["Black", "White", "Oak"] as const;
 
 /** Re-prices a cart from the database so the client can never set its own prices. */
-export async function priceCart(lines: CartLine[], settings: Settings, code?: string | null) {
+export type DeliveryArea = "inside" | "outside";
+
+export function shippingFor(area: DeliveryArea, settings: Settings) {
+  return area === "outside" ? settings.shippingFeeOutside : settings.shippingFee;
+}
+
+export async function priceCart(lines: CartLine[], settings: Settings, code?: string | null, area: DeliveryArea = "inside") {
   const ids = [...new Set(lines.map((l) => l.productId))];
   const products = await db.product.findMany({ where: { id: { in: ids }, active: true }, include: { variants: true } });
 
@@ -27,7 +33,7 @@ export async function priceCart(lines: CartLine[], settings: Settings, code?: st
   const discount = await evaluateDiscount(code, subtotal, settings.currency);
   const afterDiscount = subtotal - discount.amount;
   // Threshold uses the pre-discount subtotal, matching the progress bar shoppers see in the cart.
-  const shipping = items.length === 0 || subtotal >= settings.freeShippingThreshold ? 0 : settings.shippingFee;
+  const shipping = items.length === 0 || subtotal >= settings.freeShippingThreshold ? 0 : shippingFor(area, settings);
   return { items, subtotal, discount, shipping, total: afterDiscount + shipping };
 }
 
@@ -35,9 +41,9 @@ export async function evaluateDiscount(code: string | null | undefined, subtotal
   const none = { code: null as string | null, amount: 0, error: null as string | null };
   if (!code?.trim()) return none;
   const row = await db.discountCode.findUnique({ where: { code: code.trim().toUpperCase() } });
-  if (!row || !row.active) return { ...none, error: "That code isn't valid." };
-  if (row.maxUses != null && row.usedCount >= row.maxUses) return { ...none, error: "That code has expired." };
-  if (subtotal < row.minSubtotal) return { ...none, error: `Spend ${money(row.minSubtotal, currency)} or more to use this code.` };
+  if (!row || !row.active) return { ...none, error: "কোডটি সঠিক নয়।" };
+  if (row.maxUses != null && row.usedCount >= row.maxUses) return { ...none, error: "কোডটির মেয়াদ শেষ।" };
+  if (subtotal < row.minSubtotal) return { ...none, error: `এই কোড ব্যবহার করতে কমপক্ষে ${money(row.minSubtotal, currency)} অর্ডার করুন।` };
   const amount = row.type === "percent" ? Math.round((subtotal * Math.min(row.value, 100)) / 100) : Math.min(row.value, subtotal);
   return { code: row.code, amount, error: null };
 }

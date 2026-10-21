@@ -3,9 +3,11 @@
 import Link from "next/link";
 import { useEffect } from "react";
 import { money } from "@/lib/format";
+import { FRAME_BN } from "@/lib/whatsapp";
 import { CloseIcon, LockIcon, MinusIcon, PlusIcon } from "../icons";
 import { useCart } from "./CartProvider";
 import { FreeShippingBar } from "./FreeShippingBar";
+import { WhatsAppOrderButton } from "./WhatsApp";
 
 export type Upsell = { id: string; slug: string; title: string; image: string; price: number; variantId: string | null; variantName: string };
 
@@ -31,18 +33,18 @@ export function CartDrawer({ upsells }: { upsells: Upsell[] }) {
       <div className="animate-fade-in absolute inset-0 bg-black/40" onClick={() => setOpen(false)} />
       <aside className="animate-slide-in absolute right-0 top-0 flex h-full w-full max-w-md flex-col bg-paper shadow-2xl" role="dialog" aria-label="Shopping cart">
         <div className="flex items-center justify-between border-b border-line px-5 py-4">
-          <h2 className="font-serif text-xl">Your cart</h2>
-          <button onClick={() => setOpen(false)} aria-label="Close cart" className="rounded-full p-2 hover:bg-sand">
+          <h2 className="font-serif text-xl">আপনার কার্ট</h2>
+          <button onClick={() => setOpen(false)} aria-label="কার্ট বন্ধ করুন" className="rounded-full p-2 hover:bg-sand">
             <CloseIcon />
           </button>
         </div>
 
         {items.length === 0 ? (
           <div className="flex flex-1 flex-col items-center justify-center gap-4 p-8 text-center">
-            <p className="font-serif text-2xl">Your walls are waiting.</p>
-            <p className="text-muted">Your cart is empty — let&apos;s fix that.</p>
+            <p className="font-serif text-2xl">আপনার দেয়াল অপেক্ষা করছে।</p>
+            <p className="text-muted">কার্টে এখনো কিছু নেই।</p>
             <Link href="/shop" onClick={() => setOpen(false)} className="btn btn-primary">
-              Browse prints
+              প্রিন্ট দেখুন
             </Link>
           </div>
         ) : (
@@ -63,7 +65,7 @@ export function CartDrawer({ upsells }: { upsells: Upsell[] }) {
                     </div>
                     <p className="text-sm text-muted">
                       {item.variantName}
-                      {item.frame ? ` · ${item.frame} frame` : " · Unframed"}
+                      {item.frame ? ` · ${FRAME_BN[item.frame] ?? item.frame} ফ্রেম` : " · ফ্রেম ছাড়া"}
                     </p>
                     <div className="mt-auto flex items-center justify-between pt-2">
                       <div className="flex items-center rounded-full border border-line">
@@ -76,7 +78,7 @@ export function CartDrawer({ upsells }: { upsells: Upsell[] }) {
                         </button>
                       </div>
                       <button onClick={() => remove(item.key)} className="text-sm text-muted underline-offset-2 hover:underline">
-                        Remove
+                        বাদ দিন
                       </button>
                     </div>
                   </div>
@@ -85,7 +87,7 @@ export function CartDrawer({ upsells }: { upsells: Upsell[] }) {
 
               {suggestions.length > 0 && (
                 <li className="border-t border-line pt-4">
-                  <p className="mb-3 text-sm font-semibold">Complete the gallery wall</p>
+                  <p className="mb-3 text-sm font-semibold">সাথে নিতে পারেন</p>
                   <div className="grid grid-cols-2 gap-3">
                     {suggestions.map((u) => (
                       <div key={u.id} className="rounded-lg border border-line bg-white p-2">
@@ -99,7 +101,7 @@ export function CartDrawer({ upsells }: { upsells: Upsell[] }) {
                               add({ productId: u.id, slug: u.slug, title: u.title, image: u.image, variantId: u.variantId, variantName: u.variantName, frame: "", unitPrice: u.price }, 1, true)
                             }
                           >
-                            + Add
+                            + যোগ করুন
                           </button>
                         </div>
                       </div>
@@ -111,14 +113,15 @@ export function CartDrawer({ upsells }: { upsells: Upsell[] }) {
 
             <div className="border-t border-line bg-white px-5 py-4">
               <div className="flex justify-between text-base">
-                <span>Subtotal</span>
+                <span>সাবটোটাল</span>
                 <span className="font-semibold">{money(subtotal, config.currency)}</span>
               </div>
-              <p className="mt-1 text-xs text-muted">Shipping & discounts calculated at checkout.</p>
+              <p className="mt-1 text-xs text-muted">ডেলিভারি চার্জ ও ডিসকাউন্ট চেকআউটে হিসাব হবে।</p>
               <Link href="/checkout" onClick={() => setOpen(false)} className="btn btn-accent mt-4 w-full">
-                <LockIcon className="h-4 w-4" /> Checkout securely
+                <LockIcon className="h-4 w-4" /> চেকআউট করুন
               </Link>
-              <p className="mt-3 text-center text-xs text-muted">30-day happy returns · Cash on delivery available</p>
+              <WhatsAppOrderButton items={items} className="mt-2 w-full" />
+              <p className="mt-3 text-center text-xs text-muted">ক্যাশ অন ডেলিভারি · সারা বাংলাদেশে ডেলিভারি</p>
             </div>
           </>
         )}

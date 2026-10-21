@@ -11,23 +11,26 @@ datasource db {
 model Setting {
   id                    Int     @id @default(1)
   storeName             String  @default("Wallsy")
-  tagline               String  @default("Art that makes a house feel like home")
-  announcement          String  @default("Free shipping on orders over $60 · 30-day happy returns")
+  tagline               String  @default("আপনার দেয়ালে শিল্পের ছোঁয়া")
+  announcement          String  @default("সারা বাংলাদেশে ক্যাশ অন ডেলিভারি · ৳২,৫০০+ অর্ডারে ফ্রি ডেলিভারি")
   announcementEnabled   Boolean @default(true)
-  heroEyebrow           String  @default("New collection · Autumn 2026")
-  heroTitle             String  @default("Walls worth staring at.")
-  heroSubtitle          String  @default("Museum-grade prints from independent artists, framed and shipped ready to hang.")
-  heroCta               String  @default("Shop bestsellers")
+  heroEyebrow           String  @default("নতুন কালেকশন এসেছে")
+  heroTitle             String  @default("আপনার দেয়াল হোক আপনার গল্প")
+  heroSubtitle          String  @default("প্রিমিয়াম কোয়ালিটির ওয়াল আর্ট, ফ্রেমসহ রেডি টু হ্যাং। সারা বাংলাদেশে ক্যাশ অন ডেলিভারি।")
+  heroCta               String  @default("এখনই কিনুন")
   heroImage             String  @default("/art/sunset-dunes.svg")
-  currency              String  @default("$")
-  freeShippingThreshold Int     @default(6000)
-  shippingFee           Int     @default(599)
-  framePrice            Int     @default(2500)
-  newsletterTitle       String  @default("Get 10% off your first order")
-  newsletterText        String  @default("New drops, interior tips and members-only sales, straight to your inbox.")
+  currency              String  @default("৳")
+  freeShippingThreshold Int     @default(250000)
+  shippingFee           Int     @default(7000) // inside Dhaka
+  shippingFeeOutside    Int     @default(13000) // outside Dhaka
+  framePrice            Int     @default(90000)
+  newsletterTitle       String  @default("প্রথম অর্ডারে ১০% ছাড় পান")
+  newsletterText        String  @default("নতুন কালেকশন, ডেকোরেশন টিপস আর এক্সক্লুসিভ অফার সবার আগে পেতে যোগ দিন।")
   newsletterCode        String  @default("WELCOME10")
   contactEmail          String  @default("hello@wallsy.shop")
-  contactPhone          String  @default("")
+  contactPhone          String  @default("+880 1839-295114")
+  // Digits only with country code, used for wa.me links
+  whatsappNumber        String  @default("8801839295114")
   instagram             String  @default("")
   facebook              String  @default("")
 }
@@ -88,13 +91,14 @@ model Review {
 model Order {
   id            String      @id @default(cuid())
   number        Int         @unique
-  email         String
+  email         String      @default("")
   name          String
   phone         String      @default("")
   address       String
   city          String
   zip           String      @default("")
-  country       String
+  country       String      @default("Bangladesh")
+  deliveryArea  String      @default("inside") // inside | outside Dhaka
   note          String      @default("")
   subtotal      Int
   discount      Int         @default(0)

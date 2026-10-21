@@ -2,17 +2,20 @@
 
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
-import { priceCart, type CartLine } from "@/lib/pricing";
+import { priceCart, type CartLine, type DeliveryArea } from "@/lib/pricing";
 import { getSettings } from "@/lib/settings";
 
 type FormState = { ok?: boolean; error?: string } | null;
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+// Bangladeshi mobile numbers: 01XXXXXXXXX, optionally with +88 / 88 in front.
+const BD_MOBILE = /^(?:\+?88)?(01[3-9]\d{8})$/;
+const area = (v: unknown): DeliveryArea => (v === "outside" ? "outside" : "inside");
 const clean = (v: FormDataEntryValue | null, max = 200) => String(v ?? "").trim().slice(0, max);
 
 export async function subscribe(_: FormState, form: FormData): Promise<FormState> {
   const email = clean(form.get("email")).toLowerCase();
-  if (!EMAIL.test(email)) return { error: "Please enter a valid email." };
+  if (!EMAIL.test(email)) return { error: "সঠিক ইমেইল দিন।" };
   await db.subscriber.upsert({ where: { email }, update: {}, create: { email } });
   return { ok: true };
 }
@@ -22,7 +25,7 @@ export async function submitReview(_: FormState, form: FormData): Promise<FormSt
   const name = clean(form.get("name"), 60);
   const body = clean(form.get("body"), 1000);
   const rating = Number(form.get("rating"));
-  if (!name || body.length < 10 || !(rating >= 1 && rating <= 5)) return { error: "Please add your name, a rating and at least a sentence." };
+  if (!name || body.length < 10 || !(rating >= 1 && rating <= 5)) return { error: "আপনার নাম, রেটিং এবং অন্তত একটি বাক্য লিখুন।" };
   const product = await db.product.findUnique({ where: { id: productId }, select: { id: true } });
   if (!product) return { error: "Product not found." };
   await db.review.create({ data: { productId, name, body, rating: Math.round(rating) } });
@@ -39,9 +42,9 @@ function sanitizeLines(lines: unknown): CartLine[] {
   }));
 }
 
-export async function previewCheckout(rawLines: unknown, code: string | null) {
+export async function previewCheckout(rawLines: unknown, code: string | null, deliveryArea: unknown) {
   const settings = await getSettings();
-  const cart = await priceCart(sanitizeLines(rawLines), settings, code);
+  const cart = await priceCart(sanitizeLines(rawLines), settings, code, area(deliveryArea));
   return {
     subtotal: cart.subtotal,
     discount: cart.discount.amount,
@@ -54,16 +57,21 @@ export async function previewCheckout(rawLines: unknown, code: string | null) {
   };
 }
 
-export type CustomerInput = { email: string; name: string; phone: string; address: string; city: string; zip: string; country: string; note: string };
+export type CustomerInput = { name: string; phone: string; email: string; address: string; city: string; deliveryArea: string; note: string };
 
 export async function placeOrder(rawLines: unknown, customer: CustomerInput, code: string | null): Promise<{ id?: string; error?: string }> {
-  const c = Object.fromEntries(Object.entries(customer ?? {}).map(([k, v]) => [k, String(v ?? "").trim().slice(0, 300)])) as CustomerInput;
-  if (!EMAIL.test(c.email)) return { error: "Please enter a valid email address." };
-  if (!c.name || !c.address || !c.city || !c.country) return { error: "Please complete your shipping details." };
+  const get = (k: keyof CustomerInput) => String(customer?.[k] ?? "").trim().slice(0, 300);
+  const phone = get("phone").replace(/[\s-]/g, "").match(BD_MOBILE)?.[1];
+  const email = get("email");
+  if (!get("name")) return { error: "আপনার নাম লিখুন।" };
+  if (!phone) return { error: "সঠিক মোবাইল নম্বর দিন (যেমন 01XXXXXXXXX)।" };
+  if (email && !EMAIL.test(email)) return { error: "ইমেইল সঠিক নয়। না থাকলে ঘরটি খালি রাখুন।" };
+  if (!get("address") || !get("city")) return { error: "সম্পূর্ণ ঠিকানা ও জেলা লিখুন।" };
+  const c = { name: get("name"), phone, email, address: get("address"), city: get("city"), note: get("note"), deliveryArea: area(customer?.deliveryArea), country: "Bangladesh" };
 
   const settings = await getSettings();
-  const cart = await priceCart(sanitizeLines(rawLines), settings, code);
-  if (!cart.items.length) return { error: "Your cart is empty." };
+  const cart = await priceCart(sanitizeLines(rawLines), settings, code, c.deliveryArea);
+  if (!cart.items.length) return { error: "আপনার কার্ট খালি।" };
   if (code && cart.discount.error) return { error: cart.discount.error };
 
   try {
@@ -75,7 +83,7 @@ export async function placeOrder(rawLines: unknown, customer: CustomerInput, cod
         const updated = await tx.product.updateMany({ where: { id, stock: { gte: qty } }, data: { stock: { decrement: qty } } });
         if (updated.count === 0) {
           const p = cart.items.find((i) => i.product.id === id)!.product;
-          throw new Error(`Sorry, only ${Math.max(0, p.stock)} of “${p.title}” left in stock.`);
+          throw new Error(`দুঃখিত, “${p.title}” মাত্র ${Math.max(0, p.stock)}টি স্টকে আছে।`);
         }
       }
       if (cart.discount.code) await tx.discountCode.update({ where: { code: cart.discount.code }, data: { usedCount: { increment: 1 } } });
@@ -108,6 +116,6 @@ export async function placeOrder(rawLines: unknown, customer: CustomerInput, cod
     revalidatePath("/", "layout");
     return { id: order.id };
   } catch (e) {
-    return { error: e instanceof Error && e.message.startsWith("Sorry") ? e.message : "We couldn't place your order. Please try again." };
+    return { error: e instanceof Error && e.message.startsWith("দুঃখিত") ? e.message : "অর্ডার করা যায়নি। আবার চেষ্টা করুন অথবা WhatsApp-এ অর্ডার করুন।" };
   }
 }

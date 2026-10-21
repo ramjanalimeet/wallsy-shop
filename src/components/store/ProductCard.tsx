@@ -18,12 +18,12 @@ export function ProductCard({ product, currency }: { product: CatalogProduct; cu
         </div>
         <div className="absolute left-3 top-3 flex flex-col gap-1.5">
           {off > 0 && <span className="rounded-full bg-accent px-2.5 py-1 text-xs font-bold text-white">-{off}%</span>}
-          {product.bestseller && <span className="rounded-full bg-ink px-2.5 py-1 text-xs font-semibold text-white">Bestseller</span>}
+          {product.bestseller && <span className="rounded-full bg-ink px-2.5 py-1 text-xs font-semibold text-white">বেস্টসেলার</span>}
         </div>
         {product.stock > 0 && product.stock <= 5 && (
-          <span className="absolute bottom-3 left-3 rounded-full bg-white/90 px-2.5 py-1 text-xs font-semibold text-accent-dark">Only {product.stock} left</span>
+          <span className="absolute bottom-3 left-3 rounded-full bg-white/90 px-2.5 py-1 text-xs font-semibold text-accent-dark">মাত্র {product.stock}টি বাকি</span>
         )}
-        {product.stock <= 0 && <span className="absolute bottom-3 left-3 rounded-full bg-white/90 px-2.5 py-1 text-xs font-semibold text-muted">Sold out</span>}
+        {product.stock <= 0 && <span className="absolute bottom-3 left-3 rounded-full bg-white/90 px-2.5 py-1 text-xs font-semibold text-muted">স্টক শেষ</span>}
       </Link>
       <QuickAdd product={product} />
       <div className="mt-3 flex flex-1 flex-col">
@@ -33,7 +33,7 @@ export function ProductCard({ product, currency }: { product: CatalogProduct; cu
           </Link>
           <p className="shrink-0 text-right">
             <span className="font-semibold">
-              {from && <span className="text-xs font-normal text-muted">from </span>}
+              {from && <span className="text-xs font-normal text-muted">শুরু </span>}
               {money(product.price, currency)}
             </span>
             {off > 0 && <span className="ml-1.5 text-sm text-muted line-through">{money(product.compareAtPrice!, currency)}</span>}
