@@ -10,7 +10,7 @@ The build needs no database and no settings, so it can't fail on missing configu
 
 1. On [vercel.com/new](https://vercel.com/new), import this repository and click **Deploy**.
 2. In the new project, open **Storage → Create Database → Neon** and connect it to the project.
-3. Open **Settings → Environment Variables** and add `ADMIN_PASSWORD` (your dashboard password).
+3. Open **Settings → Environment Variables** and add `ADMIN_PASSWORD` (your dashboard password) and, optionally, `ADMIN_EMAIL` (the email you sign in with).
 4. Open **Deployments → ⋯ → Redeploy**.
 
 On the first visit, the store creates its tables and loads the starter catalog (products, collections and discount codes, with no fake reviews or orders). Until a database is connected, every page shows these setup steps instead of an error.

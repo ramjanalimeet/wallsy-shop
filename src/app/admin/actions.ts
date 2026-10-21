@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { adminConfigured, checkPassword, createSession, destroySession, requireAdmin } from "@/lib/auth";
+import { adminConfigured, checkCredentials, createSession, destroySession, requireAdmin } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { slugify } from "@/lib/format";
 
@@ -34,7 +34,7 @@ function refresh() {
 
 export async function login(_: State, form: FormData): Promise<State> {
   if (!adminConfigured()) return { error: "Set ADMIN_PASSWORD in your environment variables first." };
-  if (!checkPassword(str(form, "password"))) return { error: "Wrong password." };
+  if (!checkCredentials(str(form, "email"), str(form, "password"))) return { error: "Wrong email or password." };
   await createSession();
   redirect("/admin");
 }

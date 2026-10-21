@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { adminConfigured, isAdmin } from "@/lib/auth";
+import { adminConfigured, adminEmailRequired, isAdmin } from "@/lib/auth";
 import { LoginForm } from "./LoginForm";
 
 export const metadata = { title: "Admin login", robots: { index: false } };
@@ -14,7 +14,7 @@ export default async function LoginPage() {
         </p>
         <p className="mt-1 text-sm text-muted">Sign in to manage your store</p>
         {adminConfigured() ? (
-          <LoginForm />
+          <LoginForm withEmail={adminEmailRequired()} />
         ) : (
           <div className="mt-6 rounded-lg bg-sand p-4 text-sm">
             <p className="font-semibold">Set your admin password</p>

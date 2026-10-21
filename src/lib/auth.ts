@@ -38,12 +38,20 @@ function safeEqual(a: string, b: string) {
   return ab.length === bb.length && timingSafeEqual(ab, bb);
 }
 
-export function checkPassword(password: string) {
+/** Optional sign-in email. When ADMIN_EMAIL isn't set, only the password is checked. */
+export function adminEmailRequired() {
+  return Boolean(process.env.ADMIN_EMAIL?.trim());
+}
+
+export function checkCredentials(email: string, password: string) {
   const expected = adminPassword();
   const key = signingKey();
   if (!expected || !key) return false;
+  const expectedEmail = process.env.ADMIN_EMAIL?.trim().toLowerCase() ?? "";
   // Compare HMACs so the comparison is constant-time regardless of length.
-  return safeEqual(sign(password, key), sign(expected, key));
+  const emailOk = !expectedEmail || safeEqual(sign(email.trim().toLowerCase(), key), sign(expectedEmail, key));
+  const passwordOk = safeEqual(sign(password, key), sign(expected, key));
+  return emailOk && passwordOk;
 }
 
 export async function createSession() {
