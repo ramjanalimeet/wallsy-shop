@@ -2,10 +2,13 @@ import { AdminNav } from "@/components/admin/AdminNav";
 import { requireAdmin } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { getSettings } from "@/lib/settings";
+import { getSetupStatus } from "@/lib/setup";
 
 export const metadata = { title: "Dashboard", robots: { index: false } };
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
+  // The root layout shows setup instructions instead.
+  if (!(await getSetupStatus()).ok) return null;
   await requireAdmin();
   const [settings, pendingOrders, pendingReviews] = await Promise.all([
     getSettings(),

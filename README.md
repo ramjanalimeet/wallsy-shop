@@ -4,28 +4,35 @@ A conversion-focused e-commerce store for art prints, with a built-in dashboard 
 
 ## Deploy on Vercel
 
-1. Import this repo into Vercel.
-2. In the project, open **Storage → Create Database → Neon (Postgres)** and connect it to the project. This sets `DATABASE_URL` for you.
-3. Under **Settings → Environment Variables**, add:
-   - `ADMIN_PASSWORD`: the password for `/admin`
-   - `ADMIN_SECRET`: a long random string (for example the output of `openssl rand -hex 32`)
-4. Redeploy (**Deployments → ⋯ → Redeploy**).
+The build needs no database and no settings, so it can't fail on missing configuration.
 
-Each build creates or updates the database tables. On a brand-new database it also loads the starter catalog (products, collections and discount codes, with no fake reviews or orders) so the store isn't empty. After that, builds never touch your data. Any other Postgres provider (Supabase, Railway…) works too: just set `DATABASE_URL`.
+1. On [vercel.com/new](https://vercel.com/new), import this repository and click **Deploy**.
+2. In the new project, open **Storage → Create Database → Neon** and connect it to the project.
+3. Open **Settings → Environment Variables** and add `ADMIN_PASSWORD` (your dashboard password).
+4. Open **Deployments → ⋯ → Redeploy**.
+
+On the first visit, the store creates its tables and loads the starter catalog (products, collections and discount codes, with no fake reviews or orders). Until a database is connected, every page shows these setup steps instead of an error.
+
+Other Postgres hosts (Supabase, Railway…) work too. The app finds the connection string in `DATABASE_URL`, `POSTGRES_PRISMA_URL` or `POSTGRES_URL`, including versions with a custom prefix such as `STORAGE_DATABASE_URL`.
+
+Optional: set `ADMIN_SECRET` to a long random string to sign dashboard sessions with a separate key. Without it, the key comes from the password, so changing the password signs everyone out.
 
 ## Run it locally
 
 ```bash
 npm install
-cp .env.example .env      # set DATABASE_URL to a Postgres database, plus ADMIN_PASSWORD and ADMIN_SECRET
-npm run setup             # creates the tables and loads demo products, reviews and orders
-npm run dev
+cp .env.example .env      # point DATABASE_URL at any Postgres database
+npm run dev               # tables and the starter catalog are created on the first visit
 ```
 
 - Storefront: http://localhost:3000
 - Dashboard: http://localhost:3000/admin (sign in with `ADMIN_PASSWORD`)
 
-`npm run db:seed` resets the database to the full demo data, including sample reviews and orders. **It deletes all products, orders and settings. Never run it against your live store.**
+`npm run db:demo` replaces everything with the demo store, including sample reviews and orders, which is handy for trying out the dashboard. **It deletes all products, orders and settings. Never run it against your live store.**
+
+### Changing the database schema
+
+The tables are created from `src/lib/schema-sql.ts`, which `npm run build` regenerates from `prisma/schema.prisma`. That only covers a brand-new database. If you change the schema after launch, apply it to the existing database with `npx prisma db push`.
 
 ## What's in the storefront
 
@@ -65,7 +72,7 @@ Totals are always recalculated on the server from the database, so prices can't 
 
 The demo artwork is generated SVG in `public/art` (`node scripts/generate-art.mjs`). For real products, upload photos anywhere public (Cloudinary, S3, your CDN, or `public/`) and paste the URLs into the product form, one per line.
 
-In production the app refuses the placeholder password and secret from `.env.example`.
+In production the app refuses the example password from `.env.example`.
 
 ## Next steps worth adding
 

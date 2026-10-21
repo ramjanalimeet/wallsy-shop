@@ -1,8 +1,15 @@
-import { PrismaClient } from "@prisma/client";
-import { databaseUrl } from "./database-url.mjs";
+import { prisma } from "./prisma-client";
+import { ensureDatabase } from "./setup";
 
-const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient };
-
-export const db = globalForPrisma.prisma ?? new PrismaClient({ datasourceUrl: databaseUrl() });
-
-if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = db;
+// Every query waits until the tables exist, so pages that render alongside the layout
+// on a brand-new database don't run before setup has finished.
+export const db = prisma.$extends({
+  query: {
+    $allModels: {
+      async $allOperations({ args, query }) {
+        await ensureDatabase();
+        return query(args);
+      },
+    },
+  },
+});

@@ -1,23 +1,35 @@
 import "server-only";
-import { createHmac, timingSafeEqual } from "node:crypto";
+import { createHash, createHmac, timingSafeEqual } from "node:crypto";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
 const COOKIE = "wallsy_admin";
 const MAX_AGE = 60 * 60 * 24 * 7;
-// Values from .env.example that must be replaced before going live.
-const PLACEHOLDER_SECRET = "replace-with-a-long-random-string";
+// The example password from .env.example is refused in production.
 const PLACEHOLDER_PASSWORD = "change-me";
 
-function secret() {
-  const s = process.env.ADMIN_SECRET;
-  if (!s || s.length < 16 || (process.env.NODE_ENV === "production" && s === PLACEHOLDER_SECRET))
-    throw new Error("ADMIN_SECRET must be set to your own random string of at least 16 characters");
-  return s;
+function adminPassword() {
+  const p = process.env.ADMIN_PASSWORD;
+  if (!p || (process.env.NODE_ENV === "production" && p === PLACEHOLDER_PASSWORD)) return null;
+  return p;
 }
 
-function sign(value: string) {
-  return createHmac("sha256", secret()).update(value).digest("hex");
+export function adminConfigured() {
+  return adminPassword() !== null;
+}
+
+/**
+ * Key for signing the session cookie. ADMIN_SECRET is optional: without it the key is
+ * derived from the password, so changing the password also signs everyone out.
+ */
+function signingKey() {
+  const password = adminPassword();
+  if (!password) return null;
+  return process.env.ADMIN_SECRET || createHash("sha256").update(`wallsy-session:${password}`).digest("hex");
+}
+
+function sign(value: string, key: string) {
+  return createHmac("sha256", key).update(value).digest("hex");
 }
 
 function safeEqual(a: string, b: string) {
@@ -27,15 +39,18 @@ function safeEqual(a: string, b: string) {
 }
 
 export function checkPassword(password: string) {
-  const expected = process.env.ADMIN_PASSWORD;
-  if (!expected || (process.env.NODE_ENV === "production" && expected === PLACEHOLDER_PASSWORD)) return false;
+  const expected = adminPassword();
+  const key = signingKey();
+  if (!expected || !key) return false;
   // Compare HMACs so the comparison is constant-time regardless of length.
-  return safeEqual(sign(password), sign(expected));
+  return safeEqual(sign(password, key), sign(expected, key));
 }
 
 export async function createSession() {
+  const key = signingKey();
+  if (!key) throw new Error("ADMIN_PASSWORD is not set");
   const expires = Date.now() + MAX_AGE * 1000;
-  const token = `${expires}.${sign(String(expires))}`;
+  const token = `${expires}.${sign(String(expires), key)}`;
   (await cookies()).set(COOKIE, token, {
     httpOnly: true,
     sameSite: "lax",
@@ -51,10 +66,11 @@ export async function destroySession() {
 
 export async function isAdmin() {
   const token = (await cookies()).get(COOKIE)?.value;
-  if (!token) return false;
+  const key = signingKey();
+  if (!token || !key) return false;
   const [expires, sig] = token.split(".");
   if (!expires || !sig || Number(expires) < Date.now()) return false;
-  return safeEqual(sig, sign(expires));
+  return safeEqual(sig, sign(expires, key));
 }
 
 export async function requireAdmin() {

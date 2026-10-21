@@ -5,8 +5,11 @@ import { Header } from "@/components/store/Header";
 import { listProducts } from "@/lib/catalog";
 import { db } from "@/lib/db";
 import { getSettings } from "@/lib/settings";
+import { getSetupStatus } from "@/lib/setup";
 
 export default async function StoreLayout({ children }: { children: React.ReactNode }) {
+  // The root layout shows setup instructions instead.
+  if (!(await getSetupStatus()).ok) return null;
   const [settings, categories, bestsellers] = await Promise.all([
     getSettings(),
     db.category.findMany({ orderBy: { sortOrder: "asc" }, select: { name: true, slug: true } }),

@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { checkPassword, createSession, destroySession, requireAdmin } from "@/lib/auth";
+import { adminConfigured, checkPassword, createSession, destroySession, requireAdmin } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { slugify } from "@/lib/format";
 
@@ -24,7 +24,7 @@ function refresh() {
 // ---------- Auth ----------
 
 export async function login(_: State, form: FormData): Promise<State> {
-  if (!process.env.ADMIN_PASSWORD) return { error: "ADMIN_PASSWORD is not set on the server." };
+  if (!adminConfigured()) return { error: "Set ADMIN_PASSWORD in your environment variables first." };
   if (!checkPassword(str(form, "password"))) return { error: "Wrong password." };
   await createSession();
   redirect("/admin");
