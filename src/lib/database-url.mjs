@@ -13,9 +13,20 @@ function find(names, env) {
   return undefined;
 }
 
+/**
+ * On serverless hosts many copies of the app can run at once, and each Prisma client
+ * opens several connections by default. Databases like Prisma Postgres allow only a
+ * handful of direct connections, so give each copy a single connection there.
+ * An explicit connection_limit in the URL always wins.
+ */
+function limitConnections(url, env) {
+  if (!url || !env.VERCEL || !/^postgres(ql)?:\/\//.test(url) || /[?&]connection_limit=/.test(url)) return url;
+  return `${url}${url.includes("?") ? "&" : "?"}connection_limit=1&pool_timeout=20`;
+}
+
 /** Connection string for the running app (pooled when available). */
 export function databaseUrl(env = process.env) {
-  return find(POOLED, env);
+  return limitConnections(find(POOLED, env), env);
 }
 
 /** Connection string for schema changes (direct when available). */
