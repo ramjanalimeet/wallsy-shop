@@ -4,11 +4,12 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { logout } from "@/app/admin/actions";
-import { CollectionsIcon, CustomersIcon, DiscountIcon, ExternalIcon, HomeIcon, LogoutIcon, MenuIcon, OrdersIcon, ProductsIcon, SettingsIcon, StarIcon } from "./icons";
+import { CollectionsIcon, CustomersIcon, DiscountIcon, ExternalIcon, FinanceIcon, HomeIcon, LogoutIcon, MenuIcon, OrdersIcon, ProductsIcon, SettingsIcon, StarIcon } from "./icons";
 
 const links = [
   ["/admin", "Overview", HomeIcon],
   ["/admin/orders", "Orders", OrdersIcon],
+  ["/admin/finance", "Finance", FinanceIcon],
   ["/admin/products", "Products", ProductsIcon],
   ["/admin/categories", "Collections", CollectionsIcon],
   ["/admin/discounts", "Discounts", DiscountIcon],

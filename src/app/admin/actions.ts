@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { adminConfigured, checkCredentials, createSession, destroySession, requireAdmin } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { parseDhakaDate } from "@/lib/finance";
 import { slugify } from "@/lib/format";
 
 type State = { ok?: boolean; error?: string } | null;
@@ -184,9 +185,33 @@ export async function updateOrderStatus(form: FormData) {
     if (delta)
       for (const i of order.items)
         if (i.productId) await tx.product.update({ where: { id: i.productId }, data: { stock: { increment: delta * i.quantity } } });
-    await tx.order.update({ where: { id }, data: { status } });
+    // Cash-on-delivery money comes in on delivery, so Finance counts income from this date.
+    const deliveredAt = status === "delivered" ? new Date() : null;
+    await tx.order.update({ where: { id }, data: { status, deliveredAt } });
   });
   revalidatePath("/admin", "layout");
+}
+
+// ---------- Finance ----------
+
+export async function addFinanceEntry(_: State, form: FormData): Promise<State> {
+  await requireAdmin();
+  const type = str(form, "type") === "income" ? "income" : "expense";
+  const amount = cents(form, "amount");
+  if (amount <= 0) return { error: "Enter an amount greater than zero." };
+  const category = str(form, "category", 60);
+  if (!category) return { error: "Choose a category." };
+  const date = parseDhakaDate(str(form, "date"));
+  if (!date) return { error: "Choose a valid date." };
+  await db.financeEntry.create({ data: { type, category, amount, date, note: str(form, "note", 300) } });
+  revalidatePath("/admin/finance");
+  return { ok: true };
+}
+
+export async function deleteFinanceEntry(form: FormData) {
+  await requireAdmin();
+  await db.financeEntry.delete({ where: { id: str(form, "id") } });
+  revalidatePath("/admin/finance");
 }
 
 // ---------- Discounts ----------

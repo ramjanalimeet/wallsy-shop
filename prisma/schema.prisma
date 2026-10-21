@@ -107,6 +107,8 @@ model Order {
   discountCode  String?
   paymentMethod String      @default("cod")
   status        String      @default("pending") // pending | processing | shipped | delivered | cancelled
+  // When the order was marked delivered: cash-on-delivery income counts from this date.
+  deliveredAt   DateTime?
   items         OrderItem[]
   createdAt     DateTime    @default(now())
 }
@@ -141,4 +143,17 @@ model Subscriber {
   id        String   @id @default(cuid())
   email     String   @unique
   createdAt DateTime @default(now())
+}
+
+// Money in or out that isn't a store order (printing costs, ads, rent, offline sales...).
+model FinanceEntry {
+  id        String   @id @default(cuid())
+  type      String // income | expense
+  category  String
+  note      String   @default("")
+  amount    Int // minor currency units (paisa)
+  date      DateTime
+  createdAt DateTime @default(now())
+
+  @@index([date])
 }
