@@ -48,7 +48,15 @@ const statuses = ["delivered", "delivered", "delivered", "shipped", "shipped", "
 
 const slugify = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
 
+// `--if-empty` (used on deploy): only fills a brand-new database, and only with the
+// catalog. Sample reviews and orders are made up, so they're left out of a live store.
+const ifEmpty = process.argv.includes("--if-empty");
+
 async function main() {
+  if (ifEmpty) {
+    const [products, settings] = await Promise.all([db.product.count(), db.setting.count()]);
+    if (products > 0 || settings > 0) return console.log("Database already has data, skipping seed.");
+  }
   await db.orderItem.deleteMany();
   await db.order.deleteMany();
   await db.review.deleteMany();
@@ -88,12 +96,14 @@ async function main() {
             { name: "50×70 cm", price: base + 2500, sortOrder: 2 },
           ],
         },
-        reviews: {
-          create: Array.from({ length: 2 + (i % 4) }, (_, k) => {
-            const [name, rating, body] = reviewPool[(i + k) % reviewPool.length];
-            return { name: name as string, rating: rating as number, body: body as string, approved: true, createdAt: new Date(Date.now() - (k + 1) * 86400000 * 5) };
-          }),
-        },
+        reviews: ifEmpty
+          ? undefined
+          : {
+              create: Array.from({ length: 2 + (i % 4) }, (_, k) => {
+                const [name, rating, body] = reviewPool[(i + k) % reviewPool.length];
+                return { name: name as string, rating: rating as number, body: body as string, approved: true, createdAt: new Date(Date.now() - (k + 1) * 86400000 * 5) };
+              }),
+            },
       },
     });
     created.push(p);
@@ -106,6 +116,8 @@ async function main() {
       { code: "SAVE5", type: "fixed", value: 500, minSubtotal: 4000 },
     ],
   });
+
+  if (ifEmpty) return console.log(`Loaded starter catalog: ${created.length} products in ${categories.length} collections.`);
 
   // Demo orders spread over the last three weeks so the dashboard has data to show.
   for (let n = 0; n < 34; n++) {

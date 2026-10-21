@@ -10,7 +10,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
   const [settings, products] = await Promise.all([
     getSettings(),
     db.product.findMany({
-      where: q ? { OR: [{ title: { contains: q } }, { artist: { contains: q } }] } : undefined,
+      where: q ? { OR: [{ title: { contains: q, mode: "insensitive" } }, { artist: { contains: q, mode: "insensitive" } }] } : undefined,
       include: { category: true, _count: { select: { orderItems: true } } },
       orderBy: { createdAt: "desc" },
     }),

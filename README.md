@@ -2,19 +2,30 @@
 
 A conversion-focused e-commerce store for art prints, with a built-in dashboard to run it. Built with Next.js, Tailwind CSS and Prisma.
 
-## Quick start
+## Deploy on Vercel
+
+1. Import this repo into Vercel.
+2. In the project, open **Storage → Create Database → Neon (Postgres)** and connect it to the project. This sets `DATABASE_URL` for you.
+3. Under **Settings → Environment Variables**, add:
+   - `ADMIN_PASSWORD`: the password for `/admin`
+   - `ADMIN_SECRET`: a long random string (for example the output of `openssl rand -hex 32`)
+4. Redeploy (**Deployments → ⋯ → Redeploy**).
+
+Each build creates or updates the database tables. On a brand-new database it also loads the starter catalog (products, collections and discount codes, with no fake reviews or orders) so the store isn't empty. After that, builds never touch your data. Any other Postgres provider (Supabase, Railway…) works too: just set `DATABASE_URL`.
+
+## Run it locally
 
 ```bash
 npm install
-cp .env.example .env      # then set ADMIN_PASSWORD and ADMIN_SECRET
-npm run setup             # creates the SQLite database and loads demo products and orders
+cp .env.example .env      # set DATABASE_URL to a Postgres database, plus ADMIN_PASSWORD and ADMIN_SECRET
+npm run setup             # creates the tables and loads demo products, reviews and orders
 npm run dev
 ```
 
 - Storefront: http://localhost:3000
 - Dashboard: http://localhost:3000/admin (sign in with `ADMIN_PASSWORD`)
 
-`npm run db:seed` resets the store to the demo data at any time. **It deletes all products, orders and settings.**
+`npm run db:seed` resets the database to the full demo data, including sample reviews and orders. **It deletes all products, orders and settings. Never run it against your live store.**
 
 ## What's in the storefront
 
@@ -53,16 +64,6 @@ Totals are always recalculated on the server from the database, so prices can't 
 ## Images
 
 The demo artwork is generated SVG in `public/art` (`node scripts/generate-art.mjs`). For real products, upload photos anywhere public (Cloudinary, S3, your CDN, or `public/`) and paste the URLs into the product form, one per line.
-
-## Deploying
-
-SQLite is great locally but serverless hosts don't keep a writable disk. For production:
-
-1. Create a Postgres database (Neon, Supabase, Vercel Postgres, Railway…).
-2. In `prisma/schema.prisma` change `provider = "sqlite"` to `provider = "postgresql"`.
-3. Set `DATABASE_URL`, `ADMIN_PASSWORD` and `ADMIN_SECRET` (`openssl rand -hex 32`) in your host's environment variables.
-4. Run `npx prisma db push` once against the production database (and `npm run db:seed` if you want the demo content).
-5. Deploy. On Vercel the default build command (`npm run build`) works as is.
 
 In production the app refuses the placeholder password and secret from `.env.example`.
 

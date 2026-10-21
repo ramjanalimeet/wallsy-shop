@@ -38,7 +38,10 @@ export type SortKey = "featured" | "newest" | "price-asc" | "price-desc" | "rati
 export async function listProducts(opts: { category?: string; q?: string; sort?: SortKey; take?: number; where?: Prisma.ProductWhereInput } = {}) {
   const where: Prisma.ProductWhereInput = { active: true, ...opts.where };
   if (opts.category) where.category = { slug: opts.category };
-  if (opts.q) where.OR = [{ title: { contains: opts.q } }, { artist: { contains: opts.q } }, { description: { contains: opts.q } }];
+  if (opts.q) {
+    const q = { contains: opts.q, mode: "insensitive" as const };
+    where.OR = [{ title: q }, { artist: q }, { description: q }];
+  }
 
   const orderBy: Prisma.ProductOrderByWithRelationInput[] =
     opts.sort === "newest"

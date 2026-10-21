@@ -10,7 +10,7 @@ export default async function OrdersPage({ searchParams }: { searchParams: Promi
   const { status = "all", q } = await searchParams;
   const where = {
     ...(status !== "all" ? { status } : {}),
-    ...(q ? { OR: [{ name: { contains: q } }, { email: { contains: q } }, ...(Number(q) ? [{ number: Number(q) }] : [])] } : {}),
+    ...(q ? { OR: [{ name: { contains: q, mode: "insensitive" as const } }, { email: { contains: q, mode: "insensitive" as const } }, ...(Number(q) ? [{ number: Number(q) }] : [])] } : {}),
   };
   const [settings, orders, counts] = await Promise.all([
     getSettings(),
