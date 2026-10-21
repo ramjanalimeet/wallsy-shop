@@ -1,24 +1,26 @@
 // Runs before `next build`: creates/updates the database tables and, on a brand-new
 // database, loads the starter catalog so the store isn't empty on first deploy.
 import { execSync } from "node:child_process";
+import { directDatabaseUrl } from "../src/lib/database-url.mjs";
 
 // Local builds read .env; on Vercel the variables are already in the environment.
 try {
   process.loadEnvFile(".env");
 } catch {}
 
-if (!process.env.DATABASE_URL) {
+const url = directDatabaseUrl();
+if (!url) {
+  const seen = Object.keys(process.env).filter((k) => /DATABASE|POSTGRES/i.test(k));
   console.error(
-    "\n✖ DATABASE_URL is not set.\n" +
-      "  Add a Postgres database (Vercel → your project → Storage → Neon), make sure it is\n" +
-      "  connected to this project, then redeploy.\n"
+    "\n✖ No database connection string found (looked for DATABASE_URL, POSTGRES_URL and prefixed versions).\n" +
+      "  Add a Postgres database (Vercel → your project → Storage → Neon), connect it to this\n" +
+      "  project for the Production environment, then redeploy.\n" +
+      (seen.length ? `  Database-related variables present: ${seen.join(", ")}\n` : "  No database-related variables are set for this build.\n")
   );
   process.exit(1);
 }
 
-// Schema changes need a direct (non-pooled) connection when the host provides one.
-const direct = process.env.DATABASE_URL_UNPOOLED || process.env.POSTGRES_URL_NON_POOLING || process.env.DATABASE_URL;
-const run = (cmd, env = {}) => execSync(cmd, { stdio: "inherit", env: { ...process.env, ...env } });
+const run = (cmd) => execSync(cmd, { stdio: "inherit", env: { ...process.env, DATABASE_URL: url } });
 
-run("npx prisma db push --skip-generate", { DATABASE_URL: direct });
-run("npx tsx prisma/seed.ts --if-empty", { DATABASE_URL: direct });
+run("npx prisma db push --skip-generate");
+run("npx tsx prisma/seed.ts --if-empty");
