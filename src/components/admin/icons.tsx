@@ -24,3 +24,4 @@ export const PlusIcon = icon(<path d="M12 5v14M5 12h14" />);
 export const MoreIcon = icon(<><circle cx="12" cy="5" r="1" fill="currentColor" /><circle cx="12" cy="12" r="1" fill="currentColor" /><circle cx="12" cy="19" r="1" fill="currentColor" /></>);
 export const MenuIcon = icon(<path d="M4 7h16M4 12h16M4 17h16" />);
 export const FinanceIcon = icon(<><rect x="3" y="6" width="18" height="13" rx="2" /><path d="M3 10h18M16 15h2" /><path d="M7 6V4.5A1.5 1.5 0 0 1 8.5 3h7A1.5 1.5 0 0 1 17 4.5V6" /></>);
+export const JournalIcon = icon(<><path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3V4Z" /><path d="M5 17a3 3 0 0 1 3-3h11M9 8h6" /></>);

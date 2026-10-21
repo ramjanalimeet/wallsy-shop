@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { logout } from "@/app/admin/actions";
-import { CollectionsIcon, CustomersIcon, DiscountIcon, ExternalIcon, FinanceIcon, HomeIcon, LogoutIcon, MenuIcon, OrdersIcon, ProductsIcon, SettingsIcon, StarIcon } from "./icons";
+import { JournalIcon, CollectionsIcon, CustomersIcon, DiscountIcon, ExternalIcon, FinanceIcon, HomeIcon, LogoutIcon, MenuIcon, OrdersIcon, ProductsIcon, SettingsIcon, StarIcon } from "./icons";
 
 const links = [
   ["/admin", "Overview", HomeIcon],
@@ -14,6 +14,7 @@ const links = [
   ["/admin/categories", "Collections", CollectionsIcon],
   ["/admin/discounts", "Discounts", DiscountIcon],
   ["/admin/reviews", "Reviews", StarIcon],
+  ["/admin/journal", "Journal", JournalIcon],
   ["/admin/customers", "Customers", CustomersIcon],
   ["/admin/settings", "Store settings", SettingsIcon],
 ] as const;

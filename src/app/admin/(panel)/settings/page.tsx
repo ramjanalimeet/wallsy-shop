@@ -3,13 +3,14 @@ import { ActionForm, SubmitButton } from "@/components/admin/ActionForm";
 import { FaqEditor, TrustEditor } from "@/components/admin/ContentEditors";
 import { ImageField } from "@/components/admin/ImageUpload";
 import { Card, Field, PageHeader } from "@/components/admin/ui";
-import { getDeliveryText, getFaq, getReturnText, getTrust } from "@/lib/content";
+import { getAbout, getDeliveryText, getFaq, getReturnText, getTrust } from "@/lib/content";
 import { getSettings } from "@/lib/settings";
 
 const decimal = (c: number) => (c / 100).toFixed(2);
 
 export default async function SettingsPage() {
   const s = await getSettings();
+  const about = getAbout(s);
   return (
     <>
       <PageHeader title="Store settings" subtitle="Changes go live on the storefront as soon as you save." />
@@ -74,6 +75,19 @@ export default async function SettingsPage() {
           </Field>
           <Field label="Return policy" hint="Shown on product pages" className="sm:col-span-3">
             <textarea name="returnText" rows={2} defaultValue={getReturnText(s)} className="input" />
+          </Field>
+        </Card>
+
+        <Card className="grid gap-4">
+          <p className="font-semibold">About page</p>
+          <Field label="Title">
+            <input name="aboutTitle" defaultValue={about.title} className="input" />
+          </Field>
+          <Field label="Story" hint="Leave a blank line between paragraphs. Start a line with ## to make a heading.">
+            <textarea name="aboutText" rows={8} defaultValue={about.text} className="input" />
+          </Field>
+          <Field label="Image">
+            <ImageField name="aboutImage" initial={about.image} />
           </Field>
         </Card>
 

@@ -37,6 +37,9 @@ model Setting {
   faqJson               String  @default("")
   trustJson             String  @default("")
   deliveryText          String  @default("")
+  aboutTitle            String  @default("")
+  aboutText             String  @default("")
+  aboutImage            String  @default("")
   returnText            String  @default("")
   facebook              String  @default("")
 }
@@ -180,4 +183,17 @@ model Image {
   contentType String
   size        Int
   createdAt   DateTime @default(now())
+}
+
+// Journal (blog) posts written in the dashboard.
+model Post {
+  id        String   @id @default(cuid())
+  title     String
+  slug      String   @unique
+  excerpt   String   @default("")
+  body      String   @default("")
+  cover     String   @default("")
+  published Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

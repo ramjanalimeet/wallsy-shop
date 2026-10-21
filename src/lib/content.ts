@@ -48,3 +48,27 @@ export function getTrust(s: Settings) {
 }
 export const getDeliveryText = (s: Settings) => s.deliveryText.trim() || DEFAULT_DELIVERY_TEXT;
 export const getReturnText = (s: Settings) => s.returnText.trim() || DEFAULT_RETURN_TEXT;
+
+export const DEFAULT_ABOUT_TITLE = "আমাদের গল্প";
+export const DEFAULT_ABOUT_TEXT = `Wallsy-র শুরু একটা সহজ ভাবনা থেকে: সুন্দর ওয়াল আর্ট সবার জন্য হওয়া উচিত, শুধু কয়েকজনের জন্য নয়।
+
+আমরা বাংলাদেশের ঘরগুলোর জন্য বেছে বেছে আধুনিক, রুচিশীল প্রিন্ট তৈরি করি। প্রতিটি প্রিন্ট মোটা প্রিমিয়াম আর্ট পেপারে দীর্ঘস্থায়ী কালিতে ছাপা হয়, হাতে যাচাই করা হয় এবং যত্ন করে প্যাক করে পাঠানো হয়।
+
+চাইলে কাঠের ফ্রেমসহ নিতে পারেন — বক্স খুলেই দেয়ালে লাগিয়ে দিন। সারা বাংলাদেশে ক্যাশ অন ডেলিভারি, তাই নিশ্চিন্তে অর্ডার করুন।
+
+কোনো প্রশ্ন থাকলে WhatsApp-এ আমাদের মেসেজ করুন — আমরা আনন্দের সাথে সাহায্য করব।`;
+
+export const getAbout = (s: Settings) => ({
+  title: s.aboutTitle.trim() || DEFAULT_ABOUT_TITLE,
+  text: s.aboutText.trim() || DEFAULT_ABOUT_TEXT,
+  image: s.aboutImage.trim() || "/art/terracotta-arches.svg",
+});
+
+/** Splits text into paragraphs on blank lines; lines starting with "## " become headings. */
+export function toBlocks(text: string) {
+  return text
+    .split(/\n\s*\n/)
+    .map((b) => b.trim())
+    .filter(Boolean)
+    .map((b) => (b.startsWith("## ") ? { type: "h" as const, text: b.slice(3) } : { type: "p" as const, text: b }));
+}

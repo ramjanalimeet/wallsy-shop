@@ -14,7 +14,7 @@ const sorts: [SortKey, string][] = [
   ["price-desc", "দাম: বেশি থেকে কম"],
 ];
 
-type Search = { category?: string; q?: string; sort?: string };
+type Search = { category?: string; q?: string; sort?: string; filter?: string };
 
 export default async function ShopPage({ searchParams }: { searchParams: Promise<Search> }) {
   const sp = await searchParams;
@@ -22,9 +22,10 @@ export default async function ShopPage({ searchParams }: { searchParams: Promise
   const [settings, categories, products] = await Promise.all([
     getSettings(),
     db.category.findMany({ orderBy: { sortOrder: "asc" } }),
-    listProducts({ category: sp.category, q: sp.q, sort }),
+    listProducts({ category: sp.category, q: sp.q, sort, where: sp.filter === "bestseller" ? { bestseller: true } : undefined }),
   ]);
   const active = categories.find((c) => c.slug === sp.category);
+  const bestsellers = sp.filter === "bestseller";
 
   const href = (patch: Partial<Search>) => {
     const params = new URLSearchParams();
@@ -37,19 +38,19 @@ export default async function ShopPage({ searchParams }: { searchParams: Promise
   return (
     <div className="container-x py-12">
       <div className="mb-8">
-        <h1 className="font-serif text-5xl">{sp.q ? `“${sp.q}” এর ফলাফল` : (active?.name ?? "সব প্রিন্ট")}</h1>
-        <p className="mt-3 max-w-xl text-muted">{active?.description ?? "প্রিমিয়াম কোয়ালিটির ওয়াল আর্ট। সারা বাংলাদেশে ক্যাশ অন ডেলিভারি।"}</p>
+        <h1 className="font-serif text-5xl">{sp.q ? `“${sp.q}” এর ফলাফল` : bestsellers ? "বেস্টসেলার" : (active?.name ?? "সব প্রিন্ট")}</h1>
+        <p className="mt-3 max-w-xl text-muted">{bestsellers ? "আমাদের ক্রেতাদের সবচেয়ে পছন্দের প্রিন্টগুলো।" : (active?.description ?? "প্রিমিয়াম কোয়ালিটির ওয়াল আর্ট। সারা বাংলাদেশে ক্যাশ অন ডেলিভারি।")}</p>
       </div>
 
       <div className="sticky top-16 z-30 -mx-4 mb-8 flex flex-col gap-3 border-y border-line bg-paper/95 px-4 py-3 backdrop-blur sm:flex-row sm:items-center sm:justify-between">
         <div className="flex gap-2 overflow-x-auto pb-1 sm:pb-0">
-          <Link href={href({ category: undefined })} className={`shrink-0 rounded-full border px-4 py-1.5 text-sm font-medium ${!active ? "border-ink bg-ink text-white" : "border-line bg-white hover:border-ink"}`}>
+          <Link href={href({ category: undefined, filter: undefined })} className={`shrink-0 rounded-full border px-4 py-1.5 text-sm font-medium ${!active && !bestsellers ? "border-ink bg-ink text-white" : "border-line bg-white hover:border-ink"}`}>
             সব
           </Link>
           {categories.map((c) => (
             <Link
               key={c.id}
-              href={href({ category: c.slug })}
+              href={href({ category: c.slug, filter: undefined })}
               className={`shrink-0 rounded-full border px-4 py-1.5 text-sm font-medium ${active?.id === c.id ? "border-ink bg-ink text-white" : "border-line bg-white hover:border-ink"}`}
             >
               {c.name}

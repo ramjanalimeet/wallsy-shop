@@ -27,11 +27,12 @@ export function ProductCard({ product, currency }: { product: CatalogProduct; cu
       </Link>
       <QuickAdd product={product} />
       <div className="mt-3 flex flex-1 flex-col">
-        <div className="flex items-start justify-between gap-3">
+        {/* Price sits under the title on phones, beside it on wider screens. */}
+        <div className="flex flex-col gap-0.5 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
           <Link href={`/product/${product.slug}`} className="font-medium leading-snug hover:underline">
             {product.title}
           </Link>
-          <p className="shrink-0 text-right">
+          <p className="sm:shrink-0 sm:text-right">
             <span className="font-semibold">
               {from && <span className="text-xs font-normal text-muted">শুরু </span>}
               {money(product.price, currency)}

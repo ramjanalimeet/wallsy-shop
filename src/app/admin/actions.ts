@@ -360,6 +360,35 @@ export async function updateOrderDetails(_: State, form: FormData): Promise<Stat
   return { ok: true };
 }
 
+// ---------- Journal ----------
+
+export async function savePost(_: State, form: FormData): Promise<State> {
+  await requireAdmin();
+  const id = str(form, "id") || undefined;
+  const title = str(form, "title", 200);
+  if (!title) return { error: "Give the post a title." };
+  const base = slugify(str(form, "slug") || title) || `post-${Date.now()}`;
+  let slug = base;
+  for (let n = 2; ; n++) {
+    const hit = await db.post.findUnique({ where: { slug }, select: { id: true } });
+    if (!hit || hit.id === id) break;
+    slug = `${base}-${n}`;
+  }
+  const data = { title, slug, excerpt: str(form, "excerpt", 500), body: str(form, "body", 100000), cover: str(form, "cover", 500), published: bool(form, "published") };
+  const post = id ? await db.post.update({ where: { id }, data }) : await db.post.create({ data });
+  revalidatePath("/journal", "layout");
+  revalidatePath("/admin/journal");
+  if (!id) redirect(`/admin/journal/${post.id}?created=1`);
+  return { ok: true };
+}
+
+export async function deletePost(form: FormData) {
+  await requireAdmin();
+  await db.post.delete({ where: { id: str(form, "id") } });
+  revalidatePath("/journal", "layout");
+  redirect("/admin/journal");
+}
+
 // ---------- Discounts ----------
 
 export async function saveDiscount(_: State, form: FormData): Promise<State> {
@@ -452,6 +481,9 @@ export async function saveSettings(_: State, form: FormData): Promise<State> {
       returnText: str(form, "returnText", 1000),
       faqJson: str(form, "faqJson", 20000),
       trustJson: str(form, "trustJson", 5000),
+      aboutTitle: str(form, "aboutTitle", 200),
+      aboutText: str(form, "aboutText", 20000),
+      aboutImage: str(form, "aboutImage", 500),
       newsletterTitle: str(form, "newsletterTitle", 120),
       newsletterText: str(form, "newsletterText", 300),
       newsletterCode: str(form, "newsletterCode", 40).toUpperCase(),
